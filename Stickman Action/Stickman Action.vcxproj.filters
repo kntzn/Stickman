@@ -14,4 +14,47 @@
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
   </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="main.cpp">
+      <Filter>Resource Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Objects.h">
+      <Filter>Resource Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Camera.h">
+      <Filter>Resource Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Display.h">
+      <Filter>Resource Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Draw.h">
+      <Filter>Resource Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Map.h">
+      <Filter>Resource Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Materials.h">
+      <Filter>Resource Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Menu.h">
+      <Filter>Resource Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Mission.h">
+      <Filter>Resource Files</Filter>
+    </ClInclude>
+    <ClInclude Include="StickLib.h">
+      <Filter>Resource Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Guns.h">
+      <Filter>Resource Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Object.h">
+      <Filter>Resource Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sfVector.h">
+      <Filter>Resource Files</Filter>
+    </ClInclude>
+  </ItemGroup>
 </Project>
