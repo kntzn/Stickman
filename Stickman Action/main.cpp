@@ -59,6 +59,7 @@ void SinglePlayer (sf::RenderWindow &window)
 	unsigned long int tickTimer = 0;
 	float avgDelay = 0;
 	bool lMousePrsd = false, rMousePrsd = false;
+	bool windowFocus = true;
 
 	while (window.isOpen())
 		{
@@ -77,6 +78,13 @@ void SinglePlayer (sf::RenderWindow &window)
 			{
 			if (windowEvent.type == sf::Event::Closed)
 				window.close();
+
+
+			if (windowEvent.type == sf::Event::GainedFocus)
+				windowFocus = true;
+			if (windowEvent.type == sf::Event::LostFocus)
+				windowFocus = false;
+
 			if (windowEvent.type == sf::Event::MouseButtonPressed)
 				{
 				if (windowEvent.key.code == sf::Mouse::Left)
@@ -91,52 +99,56 @@ void SinglePlayer (sf::RenderWindow &window)
 				if (windowEvent.key.code == sf::Mouse::Right)
 					rMousePrsd = false;
 				}
+
 			}
 
 		sf::Vector2f thisPlayerPos;
 
 		// Physics
-		// Stickmans
-		for (auto i = stickmans.begin (); i != stickmans.end ();)
+		if (windowFocus)
 			{
-			Stickman *a = *i;
-
-			if (a->getType () == "Player")
+			// Stickmans
+			for (auto i = stickmans.begin (); i != stickmans.end ();)
 				{
-				thisPlayerPos = a->getPos ();
-				
-				a->Update (level, time, sf::Vector2f (sf::Mouse::getPosition (window))*1920.f/float (window.getSize ().x), lMousePrsd);
+				Stickman *a = *i;
+
+				if (a->getType () == "Player")
+					{
+					thisPlayerPos = a->getPos ();
+
+					a->Update (level, time, sf::Vector2f (sf::Mouse::getPosition (window))*1920.f/float (window.getSize ().x), lMousePrsd);
+					}
+				else
+					a->Update (level, time, sf::Vector2f (sf::Mouse::getPosition (window))*1920.f/float (window.getSize ().x));
+
+				if (a->isShoot ())
+					CreateBulletsFromGun (bullets, guns, a->getBulletStart (), a->getHandAngle (), a->getDisp (), a->getGun (), a->getVel ());
+
+				if (!a->getLife ())
+					{
+					i = stickmans.erase (i);
+					delete a;
+					}
+				else
+					i++;
 				}
-			else
-				a->Update (level, time, sf::Vector2f (sf::Mouse::getPosition (window))*1920.f/float (window.getSize ().x));
-
-			if (a->isShoot ())
-				CreateBulletsFromGun (bullets, guns, a->getBulletStart (), a->getHandAngle (), a->getDisp (), a->getGun (), a->getVel());
-
-			if (!a->getLife ())
+			// Bullets
+			for (auto i = bullets.begin (); i != bullets.end ();)
 				{
-				i = stickmans.erase (i);
-				delete a;
+				Object *a = *i;
+
+				a->Update (level, time);
+
+				if (!a->getLife ())
+					{
+					i = bullets.erase (i);
+					delete a;
+					}
+				else
+					i++;
 				}
-			else
-				i++;
 			}
-		// Bullets
-		for (auto i = bullets.begin (); i != bullets.end ();)
-			{
-			Object *a = *i;
-
-			a->Update (level, time);
-
-			if (!a->getLife ()) 
-				{ 
-				i = bullets.erase (i);
-				delete a; 
-				}
-			else 
-				i++;
-			}
-
+		
 		// Graphics
 		window.setView (camera.PlayerCam (sf::Vector2f (thisPlayerPos.x, thisPlayerPos.y-200)));
 		window.clear (sf::Color (32, 32, 32));
