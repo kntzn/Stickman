@@ -18,5 +18,5 @@ float rangeRand (float left, float right)
 	if (left >= right)
 		return left;
 	else
-		return left + rand ()%(int ((right-left)*10001))/10000.f;
+		return left + rand ()%(int ((right-left)*10000)+1)/10000.f;
 	}

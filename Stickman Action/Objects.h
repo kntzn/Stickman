@@ -64,39 +64,52 @@ class Stickman: public Object
 		void Draw (sf::RenderWindow &window, float time)
 			{
 			sf::Sprite hands;
+			sf::Sprite gunCharge;
 
 			hands.setOrigin (90.f + 90.f*way, 10.f);
+			gunCharge.setOrigin (90.f + 90.f*way, -20.f+int (1.f + 30*guns [currentGun].rechargePercentage ()));
 			hands.setPosition (position - sf::Vector2f (0, 180));
+			gunCharge.setPosition (hands.getPosition ());
 			hands.rotate (handAngle*toDeg+180*way+90);
+			gunCharge.rotate (hands.getRotation ());
 
 			hands.setTexture (gunsTexture);
+			gunCharge.setTexture (gunsTexture);
 
 			switch (action)
 				{
 				case Action::Stay:
 					hands.setTextureRect (sf::IntRect (270*(way), 60*guns [currentGun].getID (), 270*(1 - 2*int (way)), 60));
+					gunCharge.setTextureRect (sf::IntRect (270*(way)+270, 60*guns [currentGun].getID () + 30 - 30*guns [currentGun].rechargePercentage (), 270*(1 - 2*int (way)), 60*guns [currentGun].rechargePercentage ()));
 					break;
 				case Action::Walk:
 					hands.setTextureRect (sf::IntRect (270*(way), 60*guns [currentGun].getID (), 270*(1 - 2*int (way)), 60));
+					gunCharge.setTextureRect (sf::IntRect (270*(way)+270, 60*guns [currentGun].getID () + 30 - 30*guns [currentGun].rechargePercentage (), 270*(1 - 2*int (way)), 60*guns [currentGun].rechargePercentage ()));
 					break;
 				case Action::Run:
 					hands.setTextureRect (sf::IntRect (270*(way), 60*guns [currentGun].getID (), 270*(1 - 2*int (way)), 60));
+					gunCharge.setTextureRect (sf::IntRect (270*(way)+270, 60*guns [currentGun].getID () + 30 - 30*guns [currentGun].rechargePercentage (), 270*(1 - 2*int (way)), 60*guns [currentGun].rechargePercentage ()));
 					break;
 				case Action::Sprint:
 					hands.setTextureRect (sf::IntRect (270*(way), 60*guns [currentGun].getID (), 270*(1 - 2*int (way)), 60));
+					gunCharge.setTextureRect (sf::IntRect (270*(way)+270, 60*guns [currentGun].getID () + 30 - 30*guns [currentGun].rechargePercentage (), 270*(1 - 2*int (way)), 60*guns [currentGun].rechargePercentage ()));
 					break;
 				case Action::Jump:
 					hands.setTextureRect (sf::IntRect (270*(way), 60*guns [currentGun].getID (), 270*(1 - 2*int (way)), 60));
+					gunCharge.setTextureRect (sf::IntRect (270*(way)+270, 60*guns [currentGun].getID () + 30 - 30*guns [currentGun].rechargePercentage (), 270*(1 - 2*int (way)), 60*guns [currentGun].rechargePercentage ()));
 					break;
 				case Action::Fly:
 					hands.setTextureRect (sf::IntRect (270*(way), 60*guns [currentGun].getID (), 270*(1 - 2*int (way)), 60));
-					break;
+					gunCharge.setTextureRect (sf::IntRect (270*(way)+270, 60*guns [currentGun].getID () + 30 - 30*guns [currentGun].rechargePercentage (), 270*(1 - 2*int (way)), 60*guns [currentGun].rechargePercentage ()));
+						break;
 				default:
 					break;
 				}
 
 			Draw::Stickman (window, texture, position, false, velocity, time, way, angle, action, app);
 			window.draw (hands);
+			if (guns[currentGun].animationAvailable ())
+				window.draw (gunCharge);
 			}
 
 		bool isShoot ()

@@ -119,13 +119,13 @@ class Gun
 
 			damage = DMG;
 			dmgType = DMGTYPE;
-			bulletSpeed = bSPEED; 
+			bulletSpeed = bSPEED;
 			nBpS = nBPS;
 			magazine = MAG;
 
 			range = RANGE;
 			dispersion = DISP;
-			
+
 			mass = MASS;
 			length = LEN;
 
@@ -146,7 +146,7 @@ class Gun
 				reloadTimer = reloadTime;
 				bulletsLeftInMagazine = magazine;
 				}
-			
+
 			if (shootTimer > 0)
 				shootTimer -= time;
 			else
@@ -191,6 +191,16 @@ class Gun
 			{
 			return readyToFire;
 			}
+		// Returns true if charge animation is available
+		bool animationAvailable ()
+			{
+			return chargeAnimation;
+			}
+		// Returns percentage of charge
+		float rechargePercentage ()
+			{
+			return (reloadTime-reloadTimer)/reloadTime;
+			}
 
 		Bullet createBullet (sf::Image &img, sf::Vector2f position, float angle, float currentDisp, sf::Vector2f additionalVel = sf::Vector2f (0, 0))
 			{
@@ -221,6 +231,6 @@ void CreateBulletsFromGun (std::vector <Bullet*> &objects, sf::Image &img, sf::V
 
 //TODO: All Guns here:
 
-Gun hands  (0, gunType::Knife,  triggerType::SemiAuto, 10,  damageType::Kinetic, 40.f, 1, 1,   150.f, 0,        0,   120.f, 0.5f,    0, sf::IntRect (280, 0, 25, 60), false);
-Gun PSR400 (1, gunType::sRifle, triggerType::Hold,     200, damageType::Plasma,  80.f, 1, 1,  5000.f, Pi/32.f, 10,   210.f,  5.f,    0, sf::IntRect (540, 88, 36, 5),  true);
-Gun F12    (2, gunType::Pistol, triggerType::SemiAuto, 35,  damageType::Kinetic, 30.f, 1, 12, 2000.f, Pi/16.f, 1.5f, 142.f,  5.f, 0.5f, sf::IntRect (275, 155, 5, 3), false);
+Gun hands  (0, gunType::Knife,  triggerType::SemiAuto, 10,  damageType::Kinetic, 40.f, 1, 1,   150.f, 0,        0,   120.f, 0.25f,   0, sf::IntRect (280, 0, 25, 60), false);
+Gun PSR400 (1, gunType::sRifle, triggerType::Hold,     200, damageType::Plasma,  80.f, 1, 1,  5000.f, Pi/32.f, 10,   210.f,  3.f,    0, sf::IntRect (540, 88, 36, 5),  true);
+Gun F12    (2, gunType::Pistol, triggerType::SemiAuto, 35,  damageType::Kinetic, 30.f, 1, 12, 2000.f, Pi/16.f, 1.5f, 142.f,  3.f, 0.5f, sf::IntRect (275, 155, 5, 3), false);
