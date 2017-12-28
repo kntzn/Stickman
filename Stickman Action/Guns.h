@@ -94,7 +94,7 @@ class Gun
 		// TIMERS
 		float reloadTimer = 0, shootTimer = 0, bulletsLeftInMagazine = magazine;
 		bool readyToFire = false;
-
+		float power = 0;
 
 		// Gun id
 		int id = 0;
@@ -139,7 +139,7 @@ class Gun
 
 		void update (float time)
 			{
-			std::cout << "Bul Left: " << bulletsLeftInMagazine << " ShotDelay: " << shootTimer << " reloadTimer: " << reloadTimer << std::endl;
+			std::cout << readyToFire << std::endl;
 
 			if (bulletsLeftInMagazine == 0)
 				{
@@ -157,19 +157,15 @@ class Gun
 			else
 				reloadTimer = 0;
 
-			if (reloadTimer == 0 && shootTimer == 0)
+			if ((reloadTimer == 0 && shootTimer == 0) || (reloadTimer < reloadTime/1.5f && trgType == triggerType::Hold))
 				readyToFire = true;
 			else
 				readyToFire = false;
-			}
 
-		void fire ()
-			{
-			readyToFire = false;
-			shootTimer = shotDelay;
-			bulletsLeftInMagazine--;
-			}
 
+			//std::cout << readyToFire << std::endl;
+
+			}
 		//---------------GETTERS---------------//
 		// Returns nuber of bullets per shot
 		int nBulletsPerShot ()
@@ -201,6 +197,19 @@ class Gun
 			{
 			return (reloadTime-reloadTimer)/reloadTime;
 			}
+		// Returns type of trigger
+		int getTriggerType ()
+			{
+			return trgType;
+			}
+
+		void fire ()
+			{
+			readyToFire = false;
+			power = rechargePercentage ();
+			shootTimer = shotDelay;
+			bulletsLeftInMagazine--;
+			}
 
 		Bullet createBullet (sf::Image &img, sf::Vector2f position, float angle, float currentDisp, sf::Vector2f additionalVel = sf::Vector2f (0, 0))
 			{
@@ -208,7 +217,7 @@ class Gun
 			disp = 0;
 			return Bullet (img,
 						   position,
-						   sf::Vector2f (bulletSpeed*sin (-angle-disp), bulletSpeed*cos (-angle-disp)),
+						   sf::Vector2f (bulletSpeed*sin (-angle-disp)*power, bulletSpeed*cos (-angle-disp)*power),
 						   -(angle+disp),
 						   bulTxtrRect,
 						   range,
@@ -221,16 +230,8 @@ void CreateBulletsFromGun (std::vector <Bullet*> &objects, sf::Image &img, sf::V
 	for (int i = 0; i < gun.nBulletsPerShot(); i++)
 		objects.push_back (new Bullet (gun.createBullet (img, position, angle, currentDisp, additionalVel)));
 	}
-//
-//
-//
-// WHAT IS NEXT? 
-// reload animation
-//
-//
 
-//TODO: All Guns here:
-
-Gun hands  (0, gunType::Knife,  triggerType::SemiAuto, 10,  damageType::Kinetic, 40.f, 1, 1,   150.f, 0,        0,   120.f, 0.25f,   0, sf::IntRect (280, 0, 25, 60), false);
-Gun PSR400 (1, gunType::sRifle, triggerType::Hold,     200, damageType::Plasma,  80.f, 1, 1,  5000.f, Pi/32.f, 10,   210.f,  3.f,    0, sf::IntRect (540, 88, 36, 5),  true);
-Gun F12    (2, gunType::Pistol, triggerType::SemiAuto, 35,  damageType::Kinetic, 30.f, 1, 12, 2000.f, Pi/16.f, 1.5f, 142.f,  3.f, 0.5f, sf::IntRect (275, 155, 5, 3), false);
+// All Guns models list:
+Gun hands  (0, gunType::Knife,  triggerType::SemiAuto, 10,  damageType::Kinetic, 60.f, 1, 1,   2.f, 0,        0,   120.f, 0.5f,     0, sf::IntRect (280, 0, 25, 60), false);
+Gun PSR400 (1, gunType::sRifle, triggerType::Hold,     200, damageType::Plasma,  80.f, 1, 1,  500.f, Pi/32.f, 10,   210.f,  3.f,     0, sf::IntRect (540, 88, 36, 5),  true);
+Gun F12    (2, gunType::Pistol, triggerType::SemiAuto, 35,  damageType::Kinetic, 60.f, 1, 12, 200.f, Pi/16.f, 1.5f, 142.f,  3.f, 0.25f, sf::IntRect (275, 155, 10, 6), false);

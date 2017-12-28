@@ -58,6 +58,7 @@ void SinglePlayer (sf::RenderWindow &window)
 	sf::Clock delayTimer;
 	unsigned long int tickTimer = 0;
 	float avgDelay = 0;
+	bool lMousePrsd = false, rMousePrsd = false;
 
 	while (window.isOpen())
 		{
@@ -76,20 +77,35 @@ void SinglePlayer (sf::RenderWindow &window)
 			{
 			if (windowEvent.type == sf::Event::Closed)
 				window.close();
+			if (windowEvent.type == sf::Event::MouseButtonPressed)
+				{
+				if (windowEvent.key.code == sf::Mouse::Left)
+					lMousePrsd = true;
+				if (windowEvent.key.code == sf::Mouse::Right)
+					rMousePrsd = true;
+				}
+			if (windowEvent.type == sf::Event::MouseButtonReleased)
+				{
+				if (windowEvent.key.code == sf::Mouse::Left)
+					lMousePrsd = false;
+				if (windowEvent.key.code == sf::Mouse::Right)
+					rMousePrsd = false;
+				}
 			}
 
 		sf::Vector2f thisPlayerPos;
 
-		//Physics
+		// Physics
+		// Stickmans
 		for (auto i = stickmans.begin (); i != stickmans.end ();)
 			{
 			Stickman *a = *i;
 
-
 			if (a->getType () == "Player")
 				{
 				thisPlayerPos = a->getPos ();
-				a->Update (level, time, sf::Vector2f (sf::Mouse::getPosition (window))*1920.f/float (window.getSize ().x), true);
+				
+				a->Update (level, time, sf::Vector2f (sf::Mouse::getPosition (window))*1920.f/float (window.getSize ().x), lMousePrsd);
 				}
 			else
 				a->Update (level, time, sf::Vector2f (sf::Mouse::getPosition (window))*1920.f/float (window.getSize ().x));
@@ -105,7 +121,7 @@ void SinglePlayer (sf::RenderWindow &window)
 			else
 				i++;
 			}
-
+		// Bullets
 		for (auto i = bullets.begin (); i != bullets.end ();)
 			{
 			Object *a = *i;
@@ -121,7 +137,7 @@ void SinglePlayer (sf::RenderWindow &window)
 				i++;
 			}
 
-		//Graphics
+		// Graphics
 		window.setView (camera.PlayerCam (sf::Vector2f (thisPlayerPos.x, thisPlayerPos.y-200)));
 		window.clear (sf::Color (32, 32, 32));
 		level.Draw (window, map_sprite, thisPlayerPos);

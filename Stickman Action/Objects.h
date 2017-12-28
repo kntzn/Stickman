@@ -129,6 +129,8 @@ class Stickman: public Object
 class Player: public Stickman
 	{
 	private:
+		bool lastTriggerState = false;
+
 		void Control (sf::Vector2f target, float time)
 			{
 			// Toolbar switch
@@ -178,7 +180,8 @@ class Player: public Stickman
 				handAngle = mouseAngle;
 
 			shooting = trigger;
-			if (!guns [currentGun].isReady ())
+			if (!guns [currentGun].isReady () ||
+				(guns [currentGun].getTriggerType () == triggerType::SemiAuto && lastTriggerState == true && trigger == true))
 				shooting = false;
 			
 			if (shooting)
@@ -220,6 +223,8 @@ class Player: public Stickman
 
 			if (velocity.x >  10 + 10*sprint) velocity.x -= 7.5f*time;
 			if (velocity.x < -10 - 10*sprint) velocity.x += 7.5f*time;
+
+			lastTriggerState = trigger;
 			}
 	public:
 		Player (sf::Image &image, sf::Image &gunImage, sf::Vector2f POS, float M):Stickman (image, gunImage, POS, M)
