@@ -1,5 +1,6 @@
 #pragma once
 #include <SFML/Graphics.hpp>
+#include "Camera.h"
 
 class WindowParameters 
 	{
@@ -36,41 +37,41 @@ WindowParameters LoadWindowParameters ()
 					if (fscanf_s (f, "%d ", &param.fpsLim) != EOF)
 						{
 						fclose (f);
-						printf ("kukusiky5\n");
 						return param;
 						}
 					else
 						{
 						fclose (f);
+						printf ("An error occurred while loading parameters (fps limits)\n");
 						return param;
 						}
 				else
 					{
 					fclose (f);
-					printf ("kukusiky\n");
+					printf ("An error occurred while loading parameters (window mode)\n");
 					return param;
 					}
 			else
 				{
 				fclose (f);
-				printf ("kukusiky\n");
+				printf ("An error occurred while loading parameters (window height)\n");
 				return param;
 				}
 		else
 			{
 			fclose (f);
-			printf ("kukusiky\n");
+			printf ("An error occurred while loading parameters (window width)\n");
 			return param;
 			}
 	else
 		{
 		fclose (f);
-		printf ("kukusiky\n");
+		printf ("An error occurred while loading parameters (antialiasing level)\n");
 		return param;
 		}
 
 	fclose (f);
-	printf ("kukusiky\n");
+	printf ("An error occurred while loading parameters (failed to open setup file)\n");
 	return param;
 	}
 
@@ -81,4 +82,15 @@ sf::Image LoadImage (sf::String path, bool Mask = true, sf::Color color = sf::Co
 	if (Mask) image.createMaskFromColor (color);
 
 	return image;
+	}
+
+bool onScreen (sf::Vector2f pos, sf::Window &window, Camera camera)
+	{
+	if (camera.cam.getCenter ().x > pos.x - window.getSize ().x/2.f)
+		if (camera.cam.getCenter ().x < pos.x + window.getSize ().x/2.f)
+			if (camera.cam.getCenter ().y > pos.y - window.getSize ().y/2.f)
+				if (camera.cam.getCenter ().y < pos.y + window.getSize ().y/2.f)
+					return true;
+
+	return false;
 	}

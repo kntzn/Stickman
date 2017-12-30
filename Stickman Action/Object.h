@@ -2,6 +2,12 @@
 #include <SFML/Graphics.hpp>
 #include "Map.h"
 
+enum objectType
+	{
+	player,
+	npc
+	};
+
 class Object
 	{
 	protected:
@@ -13,7 +19,11 @@ class Object
 		sf::Vector2f size;
 		float mass = 1, hp = 100;
 		sf::Texture texture;
-		sf::String type;
+		int type;
+
+		Object ()
+			{	
+			}
 
 	public:
 		Object (sf::Image &image, sf::Vector2f POS, float M)
@@ -46,7 +56,7 @@ class Object
 		sf::Vector2f getPos () { return position; }
 		sf::Vector2f getVel () { return velocity; }
 		float        getMass () { return mass; }
-		sf::String   getType () { return type; }
+		int          getType () { return type; }
 		bool         getLife () { return life;  }
 
 	};
