@@ -46,10 +46,7 @@ void SinglePlayer (sf::RenderWindow &window)
 	initGuns (guns);
 
 	std::vector <Stickman*> stickmans;
-	//std::vector <Bullet*> bullets;
 	Bullet bullets [1000];
-	//*bullets = Bullet (guns, sf::Vector2f (300, 500), sf::Vector2f (200, 0), -Pi/2.f, sf::IntRect (540, 88, 36, 5), 2000, 1.0f);
-	//std::cout << (bullets == nullptr) << std::endl;
 	
 	int nBullets = 0;
 	std::vector <Object*> mapObjects;
@@ -129,7 +126,7 @@ void SinglePlayer (sf::RenderWindow &window)
 				if (a->isShoot ())
 					CreateBulletsFromGun (bullets+nBullets, nBullets, a->getBulletStart (), a->getHandAngle (), a->getDisp (), a->getGun (), a->getVel ());
 
-				if (!a->getLife ())
+				if (!a->alive ())
 					{
 					i = stickmans.erase (i);
 					delete a;
@@ -142,7 +139,7 @@ void SinglePlayer (sf::RenderWindow &window)
 				{
 				bullets [i].Update (level, time);
 
-				if (!bullets [i].getLife ())
+				if (!bullets [i].alive ())
 					{
 					bullets [i] = bullets [nBullets-1];
 					nBullets--;
@@ -159,8 +156,7 @@ void SinglePlayer (sf::RenderWindow &window)
 		for (int i = 0; i < nBullets; i++)
 			if (onScreen (bullets [i].getPos (), window, camera))
 				bullets [i].Draw (window, time);
-				
-		std::cout << nBullets << std::endl;
+			
 		tickTimer++;
 
 		window.display();

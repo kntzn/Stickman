@@ -62,18 +62,19 @@ class Level
 					}
 			}
 
-		void MapGenerator (unsigned int LVL, int FRACTION)
+		void loadFromFile (const char filename [])
 			{
-			for (int x = 0; x < MAP_W/5; x++)
-				FillBlock (TileMap, sf::Vector2i (x, 0), 1);
-
 			RefreshPhysicalMap ();
 			}
 	
 		
 		Level (unsigned int LVL, int FRACTION)
 			{
-			MapGenerator (LVL, FRACTION);
+			std::string filename;
+			filename += std::to_string (LVL);
+			filename += ".ini";
+			
+			loadFromFile (filename.c_str());
 			}
 
 	void Draw (sf::RenderWindow &window, sf::Sprite map, sf::Vector2f center)

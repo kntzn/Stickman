@@ -56,9 +56,8 @@ class Bullet: public Object
 		void Control (sf::Vector2f target, float time)
 			{
 			if (distance > maxDist)
-				{
-				life = false;
-				}
+				hp = 0;
+				
 			distance += vecL (velocity)*time;
 			}
 
@@ -66,7 +65,7 @@ class Bullet: public Object
 			{
 			if (level.PhysicalMap [int (position.y/100)] [int (position.x/100)])
 				{
-				life = false;
+				hp = 0;
 				}
 			}
 
@@ -157,8 +156,6 @@ class Gun
 
 		void update (float time)
 			{
-			//std::cout << readyToFire << std::endl;
-
 			if (bulletsLeftInMagazine == 0)
 				{
 				reloadTimer = reloadTime;
@@ -179,10 +176,6 @@ class Gun
 				readyToFire = true;
 			else
 				readyToFire = false;
-
-
-			//std::cout << readyToFire << std::endl;
-
 			}
 
 		//---------------GETTERS---------------//

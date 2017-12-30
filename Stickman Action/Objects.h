@@ -1,6 +1,7 @@
 #pragma once
 #include <SFML/Graphics.hpp>
 #include "Map.h"
+#include "Mission.h"
 #include "Guns.h"
 
 class Stickman: public Object
@@ -236,13 +237,17 @@ class Player: public Stickman
 class NPC: public Stickman
 	{
 	private:
+		int fraction = 0;
+		
 		void Control (sf::Vector2f target, float time)
 			{
 			
 			}
 	public:
-		NPC (sf::Image &image, sf::Image &gunImage, sf::Vector2f POS, float M):Stickman (image, gunImage, POS, M)
+		NPC (sf::Image &image, sf::Image &gunImage, sf::Vector2f POS, float M, int npcId, int FRACTION, bool WAY):Stickman (image, gunImage, POS, M)
 			{
-			type = objectType::npc;
+			type = npcId;
+			way = WAY;
+			fraction = FRACTION;
 			}
 	};
