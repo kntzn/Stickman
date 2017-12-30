@@ -229,7 +229,7 @@ class Player: public Stickman
 	public:
 		Player (sf::Image &image, sf::Image &gunImage, sf::Vector2f POS, float M):Stickman (image, gunImage, POS, M)
 			{
-			type = "Player";
+			type = objectType::player;
 			}
 	};
 
@@ -243,6 +243,6 @@ class NPC: public Stickman
 	public:
 		NPC (sf::Image &image, sf::Image &gunImage, sf::Vector2f POS, float M):Stickman (image, gunImage, POS, M)
 			{
-			type = "NPC";
+			type = objectType::npc;
 			}
 	};

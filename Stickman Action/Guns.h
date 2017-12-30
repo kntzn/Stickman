@@ -41,6 +41,10 @@ class Bullet: public Object
 		sf::IntRect txtr;
 		float distance = 0, maxDist = 0;
 	public:
+		Bullet ()
+			{
+			}
+
 		Bullet (sf::Image &img, sf::Vector2f POS, sf::Vector2f VEL, float ANG, sf::IntRect TXTR, float maxD, float M): Object (img, POS, M)
 			{
 			angle = ANG;
@@ -76,6 +80,13 @@ class Bullet: public Object
 			cs.setFillColor (sf::Color::Red);
 			window.draw (cs);*/
 			}
+
+		void setInitParam (sf::Vector2f pos, sf::Vector2f vel, float ang)
+			{
+			position = pos;
+			velocity = vel;
+			angle = ang;
+			}
 	};
 
 class Gun
@@ -98,6 +109,10 @@ class Gun
 
 		// Gun id
 		int id = 0;
+
+		// Bullet copy
+		Bullet bullet;
+
 	public:
 		// Default constructor
 		Gun ()
@@ -105,7 +120,8 @@ class Gun
 			}
 
 		// Constructor for guns' copies
-		Gun (int ID, int GTYPE, int TRIGGER,
+		Gun (sf::Image &img, 
+			 int ID, int GTYPE, int TRIGGER,
 			 float DMG, int DMGTYPE, float bSPEED, int nBPS, int MAG,
 			 float RANGE, float DISP,
 			 float MASS, float LEN,
@@ -135,6 +151,8 @@ class Gun
 			bulTxtrRect = BULLETRECT;
 
 			chargeAnimation = chrgAnim;
+
+			bullet = Bullet (img, sf::Vector2f (0, 0), sf::Vector2f (0, 0), 0, BULLETRECT, range, 1.0f);
 			}
 
 		void update (float time)
@@ -166,6 +184,7 @@ class Gun
 			//std::cout << readyToFire << std::endl;
 
 			}
+
 		//---------------GETTERS---------------//
 		// Returns nuber of bullets per shot
 		int nBulletsPerShot ()
@@ -211,27 +230,39 @@ class Gun
 			bulletsLeftInMagazine--;
 			}
 
-		Bullet createBullet (sf::Image &img, sf::Vector2f position, float angle, float currentDisp, sf::Vector2f additionalVel = sf::Vector2f (0, 0))
+		Bullet getBullet (sf::Vector2f position, float angle, float currentDisp, sf::Vector2f additionalVel = sf::Vector2f (0, 0))
 			{
-			float disp = rangeRand (-currentDisp-dispersion, currentDisp+dispersion);
-			disp = 0;
+			float disp = rangeRand (-currentDisp, currentDisp);
+			bullet.setInitParam (position, 
+								 sf::Vector2f (bulletSpeed*sin (-angle-disp)*power, bulletSpeed*cos (-angle-disp)*power),
+								 -(angle+disp));
+			return bullet;
+			/*
 			return Bullet (img,
 						   position,
 						   sf::Vector2f (bulletSpeed*sin (-angle-disp)*power, bulletSpeed*cos (-angle-disp)*power),
 						   -(angle+disp),
 						   bulTxtrRect,
 						   range,
-						   1.0f);
+						   1.0f);*/
 			}
 	};
 
 void CreateBulletsFromGun (std::vector <Bullet*> &objects, sf::Image &img, sf::Vector2f position, float angle, float currentDisp, Gun gun, sf::Vector2f additionalVel)
 	{
 	for (int i = 0; i < gun.nBulletsPerShot(); i++)
-		objects.push_back (new Bullet (gun.createBullet (img, position, angle, currentDisp, additionalVel)));
+		objects.push_back (new Bullet (gun.getBullet (position, angle, currentDisp, additionalVel)));
 	}
 
-// All Guns models list:
-Gun hands  (0, gunType::Knife,  triggerType::SemiAuto, 10,  damageType::Kinetic, 60.f, 1, 1,   2.f, 0,        0,   120.f, 0.5f,     0, sf::IntRect (280, 0, 25, 60), false);
-Gun PSR400 (1, gunType::sRifle, triggerType::Hold,     200, damageType::Plasma,  80.f, 1, 1,  500.f, Pi/32.f, 10,   210.f,  3.f,     0, sf::IntRect (540, 88, 36, 5),  true);
-Gun F12    (2, gunType::Pistol, triggerType::SemiAuto, 35,  damageType::Kinetic, 60.f, 1, 12, 200.f, Pi/16.f, 1.5f, 142.f,  3.f, 0.25f, sf::IntRect (275, 155, 10, 6), false);
+// All Guns models declaration:
+Gun hands;
+Gun PSR400;
+Gun F12;
+
+void initGuns (sf::Image &img)
+	{
+	hands  = Gun (img, 0, gunType::Knife, triggerType::SemiAuto, 10, damageType::Kinetic, 60.f, 1, 1, 2.f, 0, 0, 120.f, 0.5f, 0, sf::IntRect (280, 0, 25, 60), false);
+	PSR400 = Gun (img, 1, gunType::sRifle, triggerType::Hold,     200, damageType::Plasma,  80.f, 1, 1,  500.f, Pi/32.f, 10,   210.f,  3.f,     0, sf::IntRect (540, 88, 36, 5),  true);
+	F12    = Gun (img, 2, gunType::Pistol, triggerType::SemiAuto, 35,  damageType::Kinetic, 60.f, 1, 12, 200.f, Pi/16.f, 1.5f, 142.f,  3.f, 0.25f, sf::IntRect (275, 155, 10, 6), false);
+
+	}

@@ -36,41 +36,41 @@ WindowParameters LoadWindowParameters ()
 					if (fscanf_s (f, "%d ", &param.fpsLim) != EOF)
 						{
 						fclose (f);
-						printf ("kukusiky5\n");
 						return param;
 						}
 					else
 						{
 						fclose (f);
+						printf ("An error occurred while loading parameters (fps limits)\n");
 						return param;
 						}
 				else
 					{
 					fclose (f);
-					printf ("kukusiky\n");
+					printf ("An error occurred while loading parameters (window mode)\n");
 					return param;
 					}
 			else
 				{
 				fclose (f);
-				printf ("kukusiky\n");
+				printf ("An error occurred while loading parameters (window height)\n");
 				return param;
 				}
 		else
 			{
 			fclose (f);
-			printf ("kukusiky\n");
+			printf ("An error occurred while loading parameters (window width)\n");
 			return param;
 			}
 	else
 		{
 		fclose (f);
-		printf ("kukusiky\n");
+		printf ("An error occurred while loading parameters (antialiasing level)\n");
 		return param;
 		}
 
 	fclose (f);
-	printf ("kukusiky\n");
+	printf ("An error occurred while loading parameters (failed to open setup file)\n");
 	return param;
 	}
 

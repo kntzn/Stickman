@@ -30,7 +30,6 @@ void loop  (WindowParameters wp)
 	{
 	sf::RenderWindow window (sf::VideoMode (wp.vm.width, wp.vm.height), "", wp.Mode, wp.cs);
 	window.setFramerateLimit (wp.fpsLim);
-	printf ("\n%d\n", wp.vm.height);
 	short int mode = 1;
 	while (mode != 0)
 		{
@@ -45,10 +44,12 @@ void SinglePlayer (sf::RenderWindow &window)
 	guns.createMaskFromColor (sf::Color (0, 0, 255));
 	sf::Texture tx; tx.loadFromFile ("Data/img/tileset.png");
 	sf::Sprite map_sprite; map_sprite.setTexture (tx);
+	initGuns (guns);
 
 	std::vector <Stickman*> stickmans;
 	std::vector <Bullet*> bullets;
 	std::vector <Object*> mapObjects;
+	
 	stickmans.push_back (new Player (stickman, guns, sf::Vector2f (5000, 300), 80));
 
 	Level level (0, 0);
@@ -112,7 +113,7 @@ void SinglePlayer (sf::RenderWindow &window)
 				{
 				Stickman *a = *i;
 
-				if (a->getType () == "Player")
+				if (a->getType () == objectType::player)
 					{
 					thisPlayerPos = a->getPos ();
 
