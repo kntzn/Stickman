@@ -7,7 +7,6 @@
 #include "Display.h"
 #include "Draw.h"
 #include "Objects.h"
-#include "Camera.h"
 
 void setup ();
 void loop  (WindowParameters wp);
@@ -47,10 +46,15 @@ void SinglePlayer (sf::RenderWindow &window)
 	initGuns (guns);
 
 	std::vector <Stickman*> stickmans;
-	std::vector <Bullet*> bullets;
+	//std::vector <Bullet*> bullets;
+	Bullet bullets [1000];
+	//*bullets = Bullet (guns, sf::Vector2f (300, 500), sf::Vector2f (200, 0), -Pi/2.f, sf::IntRect (540, 88, 36, 5), 2000, 1.0f);
+	//std::cout << (bullets == nullptr) << std::endl;
+	
+	int nBullets = 0;
 	std::vector <Object*> mapObjects;
 	
-	stickmans.push_back (new Player (stickman, guns, sf::Vector2f (5000, 300), 80));
+	stickmans.push_back (new Player (stickman, guns, sf::Vector2f (500, 300), 80));
 
 	Level level (0, 0);
 
@@ -123,7 +127,7 @@ void SinglePlayer (sf::RenderWindow &window)
 					a->Update (level, time, sf::Vector2f (sf::Mouse::getPosition (window))*1920.f/float (window.getSize ().x));
 
 				if (a->isShoot ())
-					CreateBulletsFromGun (bullets, guns, a->getBulletStart (), a->getHandAngle (), a->getDisp (), a->getGun (), a->getVel ());
+					CreateBulletsFromGun (bullets+nBullets, nBullets, a->getBulletStart (), a->getHandAngle (), a->getDisp (), a->getGun (), a->getVel ());
 
 				if (!a->getLife ())
 					{
@@ -134,19 +138,15 @@ void SinglePlayer (sf::RenderWindow &window)
 					i++;
 				}
 			// Bullets
-			for (auto i = bullets.begin (); i != bullets.end ();)
+			for (int i = 0; i < nBullets; i++)
 				{
-				Object *a = *i;
+				bullets [i].Update (level, time);
 
-				a->Update (level, time);
-
-				if (!a->getLife ())
+				if (!bullets [i].getLife ())
 					{
-					i = bullets.erase (i);
-					delete a;
+					bullets [i] = bullets [nBullets-1];
+					nBullets--;
 					}
-				else
-					i++;
 				}
 			}
 		
@@ -156,11 +156,14 @@ void SinglePlayer (sf::RenderWindow &window)
 		level.Draw (window, map_sprite, thisPlayerPos);
 		for (auto a: stickmans)
 			a->Draw(window, time);
-		for (auto a: bullets)
-			a->Draw (window, time);
-
+		for (int i = 0; i < nBullets; i++)
+			if (onScreen (bullets [i].getPos (), window, camera))
+				bullets [i].Draw (window, time);
+				
+		std::cout << nBullets << std::endl;
 		tickTimer++;
 
 		window.display();
 		}
+
 	}

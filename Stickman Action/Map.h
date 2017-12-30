@@ -49,8 +49,8 @@ void FillBlock (int TileMap [MAP_H][MAP_W], sf::Vector2i pos, int block)
 class Level
 	{
 	public:
-		int TileMap     [MAP_H][MAP_W];
-		int PhysicalMap [MAP_H][MAP_W];
+		int TileMap     [MAP_H][MAP_W] = {};
+		int PhysicalMap [MAP_H][MAP_W] = {};
 
 		void RefreshPhysicalMap ()
 			{

@@ -157,7 +157,7 @@ class Gun
 
 		void update (float time)
 			{
-			std::cout << readyToFire << std::endl;
+			//std::cout << readyToFire << std::endl;
 
 			if (bulletsLeftInMagazine == 0)
 				{
@@ -232,7 +232,7 @@ class Gun
 
 		Bullet getBullet (sf::Vector2f position, float angle, float currentDisp, sf::Vector2f additionalVel = sf::Vector2f (0, 0))
 			{
-			float disp = rangeRand (-currentDisp, currentDisp);
+			float disp = rangeRand (-currentDisp-dispersion, currentDisp+dispersion);
 			bullet.setInitParam (position, 
 								 sf::Vector2f (bulletSpeed*sin (-angle-disp)*power, bulletSpeed*cos (-angle-disp)*power),
 								 -(angle+disp));
@@ -248,10 +248,13 @@ class Gun
 			}
 	};
 
-void CreateBulletsFromGun (std::vector <Bullet*> &objects, sf::Image &img, sf::Vector2f position, float angle, float currentDisp, Gun gun, sf::Vector2f additionalVel)
+	void CreateBulletsFromGun (Bullet* empty, int &id, sf::Vector2f position, float angle, float currentDisp, Gun gun, sf::Vector2f additionalVel)
 	{
 	for (int i = 0; i < gun.nBulletsPerShot(); i++)
-		objects.push_back (new Bullet (gun.getBullet (position, angle, currentDisp, additionalVel)));
+		{
+		*empty = gun.getBullet (position, angle, currentDisp, additionalVel);
+		id++;
+		}	
 	}
 
 // All Guns models declaration:
@@ -261,8 +264,7 @@ Gun F12;
 
 void initGuns (sf::Image &img)
 	{
-	hands  = Gun (img, 0, gunType::Knife, triggerType::SemiAuto, 10, damageType::Kinetic, 60.f, 1, 1, 2.f, 0, 0, 120.f, 0.5f, 0, sf::IntRect (280, 0, 25, 60), false);
-	PSR400 = Gun (img, 1, gunType::sRifle, triggerType::Hold,     200, damageType::Plasma,  80.f, 1, 1,  500.f, Pi/32.f, 10,   210.f,  3.f,     0, sf::IntRect (540, 88, 36, 5),  true);
-	F12    = Gun (img, 2, gunType::Pistol, triggerType::SemiAuto, 35,  damageType::Kinetic, 60.f, 1, 12, 200.f, Pi/16.f, 1.5f, 142.f,  3.f, 0.25f, sf::IntRect (275, 155, 10, 6), false);
-
+	hands  = Gun (img, 0, gunType::Knife, triggerType::SemiAuto,   10, damageType::Kinetic, 60.f, 1, 1,  2.f,   0,       0,    120.f, 0.5f, 0,     sf::IntRect (280, 0, 25, 60),  false);
+	PSR400 = Gun (img, 1, gunType::sRifle, triggerType::Hold,     200, damageType::Plasma,  80.f, 1, 1,  500.f, Pi/32.f, 10,   210.f, 3.f,  0,     sf::IntRect (540, 88, 36, 5),  true);
+	F12    = Gun (img, 2, gunType::Pistol, triggerType::SemiAuto, 35,  damageType::Kinetic, 60.f, 1, 12, 200.f, Pi/16.f, 1.5f, 142.f, 3.f,  0.25f, sf::IntRect (275, 155, 10, 6), false);
 	}

@@ -1,5 +1,6 @@
 #pragma once
 #include <SFML/Graphics.hpp>
+#include "Camera.h"
 
 class WindowParameters 
 	{
@@ -81,4 +82,15 @@ sf::Image LoadImage (sf::String path, bool Mask = true, sf::Color color = sf::Co
 	if (Mask) image.createMaskFromColor (color);
 
 	return image;
+	}
+
+bool onScreen (sf::Vector2f pos, sf::Window &window, Camera camera)
+	{
+	if (camera.cam.getCenter ().x > pos.x - window.getSize ().x/2.f)
+		if (camera.cam.getCenter ().x < pos.x + window.getSize ().x/2.f)
+			if (camera.cam.getCenter ().y > pos.y - window.getSize ().y/2.f)
+				if (camera.cam.getCenter ().y < pos.y + window.getSize ().y/2.f)
+					return true;
+
+	return false;
 	}
