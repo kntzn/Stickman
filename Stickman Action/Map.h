@@ -48,6 +48,8 @@ void FillBlock (int TileMap [MAP_H][MAP_W], sf::Vector2i pos, int block)
 
 class Level
 	{
+	private:
+		
 	public:
 		int TileMap     [MAP_H][MAP_W] = {};
 		int PhysicalMap [MAP_H][MAP_W] = {};
@@ -64,8 +66,9 @@ class Level
 
 		void MapGenerator (unsigned int LVL, int FRACTION)
 			{
-			for (int x = 0; x < MAP_W/5; x++)
-				FillBlock (TileMap, sf::Vector2i (x, 0), 1);
+			int nPoints = (LVL+15)/5;
+
+			
 
 			RefreshPhysicalMap ();
 			}
@@ -74,7 +77,7 @@ class Level
 		Level (unsigned int LVL, int FRACTION)
 			{
 			MapGenerator (LVL, FRACTION);
-			}
+			}	
 
 	void Draw (sf::RenderWindow &window, sf::Sprite map, sf::Vector2f center)
 		{

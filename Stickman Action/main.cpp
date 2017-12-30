@@ -16,6 +16,7 @@ short int MainMenu (sf::RenderWindow &window);
 
 int main ()
 	{
+	srand (time(0));
 	loop (LoadWindowParameters ());
 
 	return 0;
@@ -46,8 +47,7 @@ void SinglePlayer (sf::RenderWindow &window)
 	initGuns (guns);
 
 	std::vector <Stickman*> stickmans;
-	//std::vector <Bullet*> bullets;
-	Bullet bullets [1000];
+	Bullet bullets [1024];
 	//*bullets = Bullet (guns, sf::Vector2f (300, 500), sf::Vector2f (200, 0), -Pi/2.f, sf::IntRect (540, 88, 36, 5), 2000, 1.0f);
 	//std::cout << (bullets == nullptr) << std::endl;
 	
@@ -56,7 +56,7 @@ void SinglePlayer (sf::RenderWindow &window)
 	
 	stickmans.push_back (new Player (stickman, guns, sf::Vector2f (500, 300), 80));
 
-	Level level (0, 0);
+	Level level (1, 0);
 
 	Camera camera (sf::FloatRect (0, 0, 1920, 1080));
 	
