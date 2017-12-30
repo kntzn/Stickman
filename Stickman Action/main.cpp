@@ -84,7 +84,6 @@ void SinglePlayer (sf::RenderWindow &window)
 			if (windowEvent.type == sf::Event::Closed)
 				window.close();
 
-
 			if (windowEvent.type == sf::Event::GainedFocus)
 				windowFocus = true;
 			if (windowEvent.type == sf::Event::LostFocus)
@@ -147,8 +146,7 @@ void SinglePlayer (sf::RenderWindow &window)
 					bullets [i] = bullets [nBullets-1];
 					nBullets--;
 					}
-				}
-			}
+			  }
 		
 		// Graphics
 		window.setView (camera.PlayerCam (sf::Vector2f (thisPlayerPos.x, thisPlayerPos.y-200)));
