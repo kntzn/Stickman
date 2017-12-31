@@ -251,3 +251,61 @@ class NPC: public Stickman
 			fraction = FRACTION;
 			}
 	};
+
+class ChristmasTree: public Object
+	{
+	public:
+		void Control (sf::Vector2f target, float time)
+			{}
+
+		void Draw (sf::RenderWindow &window, float time)
+			{
+			sf::Sprite sp;
+			sp.setTexture (texture);
+			sp.setPosition (position);
+			sp.setOrigin (94, 311);
+			window.draw (sp);
+			//Draw::SimpleTxtr (window, texture, sf::IntRect (0, 0, 188, 311), position);
+			}
+
+		void CheckBorders (Level &level, float time)
+			{
+			// floor
+			if (level.PhysicalMap [int (position.y/100)] [int ((position.x - 30)/100)] == 1 || level.PhysicalMap [int (position.y/100)] [int ((position.x + 30)/100)] == 1)
+				{
+				position.y = int (position.y/100)*100.f;
+				velocity.y = 0;
+				onGround = true;
+				}
+			else
+				onGround = false;
+
+			// ceilling
+			if (level.PhysicalMap [int ((position.y - size.y)/100)] [int (position.x/100)] == 1)
+				{
+				position.y = int ((position.y)/100)*100.f + int (size.y)%100;
+				velocity *= -0.8f;
+				}
+
+			// side borders
+			for (int i = 0; i < int (size.y + 99)/100; i++)
+				{
+				if (level.PhysicalMap [int (position.y)/100 - i - 1] [int ((position.x + size.x/2)/100)] == 1)
+					{
+					velocity.x *= -0.3f;
+					position.x = int ((position.x + size.x/2)/100)*100 - size.x/2;
+					}
+				if (level.PhysicalMap [int (position.y)/100 - i - 1] [int ((position.x - size.x/2)/100)] == 1)
+					{
+					velocity.x *= -0.3f;
+					position.x = int ((position.x - size.x/2)/100)*100 + 100 + size.x/2;
+					}
+				}
+			}
+
+		ChristmasTree (sf::Image &image, sf::Vector2f POS, float M): Object (image, POS, M)
+			{
+			size = sf::Vector2f (188, 311);
+			}
+
+	};

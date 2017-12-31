@@ -1,5 +1,6 @@
 #pragma once
 #include <SFML/Graphics.hpp>
+#include "FileIO.h"
 #include "Mission.h" 
 
 #define MAP_W 500
@@ -62,8 +63,17 @@ class Level
 					}
 			}
 
-		void loadFromFile (const char filename [])
+		void load (const char filename [])
 			{
+			for (int i = 0; i < 5; i++)
+				FillBlock (TileMap, sf::Vector2i (i, 1), 1);
+
+			char* buf;
+			size_t bufSize;
+			loadFromFile (filename, buf, bufSize, true, true);
+
+			free (buf);
+
 			RefreshPhysicalMap ();
 			}
 	
@@ -71,10 +81,11 @@ class Level
 		Level (unsigned int LVL, int FRACTION)
 			{
 			std::string filename;
+			filename += "Data/map/";
 			filename += std::to_string (LVL);
-			filename += ".ini";
+			filename += ".txt";
 			
-			loadFromFile (filename.c_str());
+			load (filename.c_str ());
 			}
 
 	void Draw (sf::RenderWindow &window, sf::Sprite map, sf::Vector2f center)
