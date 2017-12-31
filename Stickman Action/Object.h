@@ -5,7 +5,13 @@
 enum objectType
 	{
 	player,
-	npc
+	citizen,
+	turret,
+	solder,
+	sergeant,
+	capitain,
+	general,
+	commander
 	};
 
 class Object
@@ -14,10 +20,10 @@ class Object
 		sf::Vector2f position;
 		sf::Vector2f velocity;
 		float angle = 0;
-		bool onGround = false, life = true, trigger = false;
+		bool onGround = false, trigger = false;
 
 		sf::Vector2f size;
-		float mass = 1, hp = 100;
+		float mass = 1, hp = 100.f;
 		sf::Texture texture;
 		int type;
 
@@ -57,6 +63,6 @@ class Object
 		sf::Vector2f getVel () { return velocity; }
 		float        getMass () { return mass; }
 		int          getType () { return type; }
-		bool         getLife () { return life;  }
+		bool         alive () { return hp > 0;  }
 
 	};

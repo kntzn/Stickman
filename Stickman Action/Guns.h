@@ -56,9 +56,8 @@ class Bullet: public Object
 		void Control (sf::Vector2f target, float time)
 			{
 			if (distance > maxDist)
-				{
-				life = false;
-				}
+				hp = 0;
+				
 			distance += vecL (velocity)*time;
 			}
 
@@ -66,7 +65,7 @@ class Bullet: public Object
 			{
 			if (level.PhysicalMap [int (position.y/100)] [int (position.x/100)])
 				{
-				life = false;
+				hp = 0;
 				}
 			}
 
@@ -177,10 +176,7 @@ class Gun
 				readyToFire = true;
 			else
 				readyToFire = false;
-      
-			//std::cout << readyToFire << std::endl;
 			}
-	
 
 		//---------------GETTERS---------------//
 		// Returns nuber of bullets per shot
@@ -227,7 +223,6 @@ class Gun
 			bulletsLeftInMagazine--;
 			}
 
-
 		Bullet getBullet (sf::Vector2f position, float angle, float currentDisp, sf::Vector2f additionalVel = sf::Vector2f (0, 0))
 			{
 			float disp = rangeRand (-currentDisp-dispersion, currentDisp+dispersion);
@@ -266,5 +261,3 @@ void initGuns (sf::Image &img)
 	PSR400 = Gun (img, 1, gunType::sRifle, triggerType::Hold,     200, damageType::Plasma,  80.f, 1, 1,  500.f, Pi/32.f, 10,   210.f, 3.f,  0,     sf::IntRect (540, 88, 36, 5),  true);
 	F12    = Gun (img, 2, gunType::Pistol, triggerType::SemiAuto, 35,  damageType::Kinetic, 60.f, 1, 12, 200.f, Pi/16.f, 1.5f, 142.f, 3.f,  0.25f, sf::IntRect (275, 155, 10, 6), false);
 	}
-
-
