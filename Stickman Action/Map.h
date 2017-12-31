@@ -34,24 +34,24 @@ int Blocks  [][5][5] =
 	0, 0, 0, 0, 0,
 	0, 0, 0, 0, 0,
 	0, 0, 0, 0, 0,
-	1, 0, 0, 0, 1,
+	1, 0, 1, 0, 1,
 	1, 1, 1, 1, 1,
 	};
-
-void FillBlock (int TileMap [MAP_H][MAP_W], sf::Vector2i pos, int block)
-	{
-	for (int x = 0; x < 5; x++)
-		for (int y = 0; y < 5; y++)
-			{
-			TileMap [pos.y*5 + y][pos.x*5 + x] = Blocks [block][y][x];
-			}
-	}
 
 class Level
 	{
 	public:
 		int TileMap     [MAP_H][MAP_W] = {};
 		int PhysicalMap [MAP_H][MAP_W] = {};
+
+		void FillBlock (sf::Vector2i pos, int block)
+			{
+			for (int x = 0; x < 5; x++)
+				for (int y = 0; y < 5; y++)
+					{
+					TileMap [pos.y*5 + y] [pos.x*5 + x] = Blocks [block] [y] [x];
+					}
+			}
 
 		void RefreshPhysicalMap ()
 			{
@@ -64,26 +64,30 @@ class Level
 			}
 
 		void load (const char filename [])
-			{
-			for (int i = 0; i < 5; i++)
-				FillBlock (TileMap, sf::Vector2i (i, 1), 1);
-
-			char* buf;
-			size_t bufSize;
+			{		
+			char* buf = nullptr;
+			size_t bufSize = 0;
 			loadFromFile (filename, buf, bufSize, true, true);
+
+			size_t cursor = 0;
+			for (int y = 0; y < MAP_H; y++)
+				for (int x = 0; x < MAP_W && cursor < bufSize; x++)
+					{
+					FillBlock (sf::Vector2i (x, y), atoi (buf+cursor));
+					cursor += std::to_string (atoi (buf+cursor)).size ()+1;
+					}
 
 			free (buf);
 
 			RefreshPhysicalMap ();
 			}
 	
-		
 		Level (unsigned int LVL, int FRACTION)
 			{
 			std::string filename;
 			filename += "Data/map/";
 			filename += std::to_string (LVL);
-			filename += ".txt";
+			filename += ".ini";
 			
 			load (filename.c_str ());
 			}
