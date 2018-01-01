@@ -29,7 +29,7 @@ void loop  (WindowParameters wp)
 	{
 	sf::RenderWindow window (sf::VideoMode (wp.vm.width, wp.vm.height), "", wp.Mode, wp.cs);
 	window.setFramerateLimit (wp.fpsLim);
-	std::cout << wp.cs.antialiasingLevel;
+
 	short int mode = 1;
 	while (mode != 0)
 		{
@@ -53,6 +53,10 @@ void SinglePlayer (sf::RenderWindow &window)
 	sf::Sprite map_sprite; map_sprite.setTexture (tx);
 	initGuns (guns);
 
+	Level level (0, 0);
+
+	mapEditor (window, level, map_sprite, "Data/map/0.ini");
+
 	//---------Objects list---------//
 
 	float snow [100] = {};
@@ -68,14 +72,15 @@ void SinglePlayer (sf::RenderWindow &window)
 	stickmans.push_back (new Player (stickman, guns, sf::Vector2f (500, 300), 80));
 	mapObjects.push_back (new ChristmasTree (tree, sf::Vector2f (600, 300), 20));
 
-	Level level (0, 0);
-
-	Camera camera (sf::FloatRect (0, 0, 1920, 1080));
+	Camera camera (sf::FloatRect (0, 0, float (window.getSize().x), float (window.getSize().y)));
 	
 	//---------Variables---------//
+	// Timers
 	sf::Clock delayTimer;
 	unsigned long int tickTimer = 0;
 	float avgDelay = 0;
+
+
 	bool lMousePrsd = false, rMousePrsd = false;
 	bool windowFocus = true;
 
@@ -84,10 +89,11 @@ void SinglePlayer (sf::RenderWindow &window)
 		//Time Block
 		float time = delayTimer.getElapsedTime ().asSeconds ();
 		delayTimer.restart ();
-		//std::cout << 1.f/time << std::endl;
+		//std::cout << "FPS" << 1.f/time << std::endl;
 
 		if (tickTimer = 0) avgDelay = time;
-
+		
+		// adapt average delay if current delay is not too big
 		if (time < avgDelay*10.0f)
 			avgDelay += (time - avgDelay)/100.0f;
 
@@ -182,11 +188,13 @@ void SinglePlayer (sf::RenderWindow &window)
 				a->Update (level, time);
 			}
 
+		// Snowflakes
 		for (int i = 0; i < 100; i++)
 			{
 			snow [i] += snowSpeed [i]*time;
 			
 			if (snow [i] > camera.cam.getCenter ().y+window.getSize ().y/2) snow [i] -= window.getSize ().y;
+			if (snow [i] < camera.cam.getCenter ().y-window.getSize ().y/2) snow [i] += window.getSize ().y;
 			}
 
 		window.setView (camera.PlayerCam (sf::Vector2f (thisPlayerPos.x, thisPlayerPos.y-200)));
@@ -206,11 +214,10 @@ void SinglePlayer (sf::RenderWindow &window)
 			if (onScreen (bullets [i].getPos (), window, camera))
 				bullets [i].Draw (window, time);
 		
-		for (int i = (camera.cam.getCenter ().x-920)/20; i < (camera.cam.getCenter ().x+920)/20; i++)
+		for (int i = int (camera.cam.getCenter ().x-920)/20; i < int (camera.cam.getCenter ().x+920)/20; i++)
 			{
 			sf::CircleShape snowflake;
-			//snowflake.setPosition (i*180-window.getSize ().x, snow [i]);//snow[(i+int (thisPlayerPos.x/20))%100]);
-			snowflake.setPosition (i*20, snow [(i+100)%100]);
+			snowflake.setPosition (i*20.f, snow [(i+100)%100]);
 			snowflake.setRadius (2);
 			snowflake.setFillColor (sf::Color::White);
 			window.draw (snowflake);

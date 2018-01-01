@@ -4,7 +4,6 @@
 class Camera
 	{
 	private:
-		
 		float zoom;
 	public:
 		sf::View cam;
@@ -33,5 +32,10 @@ class Camera
 			zoom /= 1-float (deltaZoom)/10;
 
 			return cam;
+			}
+
+		float getZoom () 
+			{
+			return zoom;
 			}
 	};
