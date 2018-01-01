@@ -70,12 +70,15 @@ void SinglePlayer (sf::RenderWindow &window)
 
 	Level level (0, 0);
 
-	Camera camera (sf::FloatRect (0, 0, 1920, 1080));
+	Camera camera (sf::FloatRect (0, 0, window.getSize().x, window.getSize().y));
 	
 	//---------Variables---------//
+	// Timers
 	sf::Clock delayTimer;
 	unsigned long int tickTimer = 0;
 	float avgDelay = 0;
+
+
 	bool lMousePrsd = false, rMousePrsd = false;
 	bool windowFocus = true;
 
@@ -84,10 +87,11 @@ void SinglePlayer (sf::RenderWindow &window)
 		//Time Block
 		float time = delayTimer.getElapsedTime ().asSeconds ();
 		delayTimer.restart ();
-		//std::cout << 1.f/time << std::endl;
+		//std::cout << "FPS" << 1.f/time << std::endl;
 
 		if (tickTimer = 0) avgDelay = time;
-
+		
+		// adapt average delay if current delay is not too big
 		if (time < avgDelay*10.0f)
 			avgDelay += (time - avgDelay)/100.0f;
 
@@ -209,7 +213,6 @@ void SinglePlayer (sf::RenderWindow &window)
 		for (int i = (camera.cam.getCenter ().x-920)/20; i < (camera.cam.getCenter ().x+920)/20; i++)
 			{
 			sf::CircleShape snowflake;
-			//snowflake.setPosition (i*180-window.getSize ().x, snow [i]);//snow[(i+int (thisPlayerPos.x/20))%100]);
 			snowflake.setPosition (i*20, snow [(i+100)%100]);
 			snowflake.setRadius (2);
 			snowflake.setFillColor (sf::Color::White);

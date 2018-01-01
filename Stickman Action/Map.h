@@ -67,7 +67,7 @@ class Level
 			{		
 			char* buf = nullptr;
 			size_t bufSize = 0;
-			loadFromFile (filename, buf, bufSize, true, true);
+			loadFromFile (filename, buf, bufSize, true);
 
 			size_t cursor = 0;
 			for (int y = 0; y < MAP_H; y++)
@@ -108,3 +108,77 @@ class Level
 				}
 		}
 	};
+
+void mapEditor (sf::RenderWindow &window, Level level, sf::Sprite mapSprite)
+	{
+	float zoom = 1; //Множитель скорости
+
+	bool lMousePrsd = false, rMousePrsd = false;
+	float MouseWheelPos = 0;
+
+	bool windowFocus = true;
+	Camera cam (sf::FloatRect (0, 0, window.getSize().x, window.getSize().y));
+
+	sf::Clock delayTimer;
+	float avgDelay = 0;
+
+	while (window.isOpen () && sf::Keyboard::isKeyPressed (sf::Keyboard::Escape))
+		{
+		//Time Block
+		float time = delayTimer.getElapsedTime ().asSeconds ();
+		delayTimer.restart ();
+		
+		// adapting average delay if current delay is not too big
+		if (time < avgDelay*10.0f)
+			avgDelay += (time - avgDelay)/100.0f;
+
+		//Events
+		sf::Event windowEvent;
+
+		float initMouseWheelPos = MouseWheelPos;
+		while (window.pollEvent (windowEvent))
+			{
+			if (windowEvent.type == sf::Event::Closed)
+				window.close ();
+
+			if (windowEvent.type == sf::Event::GainedFocus)
+				windowFocus = true;
+			if (windowEvent.type == sf::Event::LostFocus)
+				windowFocus = false;
+
+			if (windowEvent.type == sf::Event::MouseButtonPressed)
+				{
+				if (windowEvent.key.code == sf::Mouse::Left)
+					lMousePrsd = true;
+				if (windowEvent.key.code == sf::Mouse::Right)
+					rMousePrsd = true;
+				}
+			if (windowEvent.type == sf::Event::MouseButtonReleased)
+				{
+				if (windowEvent.key.code == sf::Mouse::Left)
+					lMousePrsd = false;
+				if (windowEvent.key.code == sf::Mouse::Right)
+					rMousePrsd = false;
+				}
+
+			if (windowEvent.type == sf::Event::MouseWheelMoved)
+				MouseWheelPos += windowEvent.mouseWheel.delta;
+			}
+
+		//Координаты мышки
+		sf::Vector2i MousePos = sf::Mouse::getPosition (window);   //вектор, содержащий координаты позиции мыши, относительно окна
+		sf::Vector2f Pos = window.mapPixelToCoords (MousePos); //вектор, содержащий координаты позиции мыши, относительно карты
+
+ 	    //скроллинг карты
+		if (MousePos.x < 30)								    cam.cam.move (-1/zoom*time, 0);
+		if (MousePos.x > signed int (window.getSize ().x - 30)) cam.cam.move (1/zoom*time, 0);
+		if (MousePos.y < 30)								    cam.cam.move (0, -1/zoom*time);
+		if (MousePos.y > signed int (window.getSize ().y - 30)) cam.cam.move (0, 1/zoom*time);
+
+		//зумирование карты
+		window.setView (cam.update (window, sf::Mouse::getPosition (window), MouseWheelPos - initMouseWheelPos, time));
+		level.Draw (window, mapSprite, cam.cam.getCenter ());
+
+		window.display ();
+		}
+	}

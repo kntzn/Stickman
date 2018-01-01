@@ -5,6 +5,8 @@
 #include "Sticklib.h"
 #include "sfVector.h"
 
+// TODO: replace sf::Image with sf::Texture
+
 // Enums
 enum gunType
 	{
@@ -230,14 +232,6 @@ class Gun
 								 sf::Vector2f (bulletSpeed*sin (-angle-disp)*power, bulletSpeed*cos (-angle-disp)*power),
 								 -(angle+disp));
 			return bullet;
-			/*
-			return Bullet (img,
-						   position,
-						   sf::Vector2f (bulletSpeed*sin (-angle-disp)*power, bulletSpeed*cos (-angle-disp)*power),
-						   -(angle+disp),
-						   bulTxtrRect,
-						   range,
-						   1.0f);*/
 			}
 	};
 
