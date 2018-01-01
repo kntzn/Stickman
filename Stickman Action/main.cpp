@@ -55,7 +55,7 @@ void SinglePlayer (sf::RenderWindow &window)
 
 	Level level (0, 0);
 
-	mapEditor (window, level, map_sprite);
+	mapEditor (window, level, map_sprite, "Data/map/0.ini");
 
 	//---------Objects list---------//
 
@@ -188,6 +188,7 @@ void SinglePlayer (sf::RenderWindow &window)
 				a->Update (level, time);
 			}
 
+		// Snowflakes
 		for (int i = 0; i < 100; i++)
 			{
 			snow [i] += snowSpeed [i]*time;

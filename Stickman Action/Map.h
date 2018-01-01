@@ -1,5 +1,6 @@
 #pragma once
 #include <SFML/Graphics.hpp>
+#include <sstream>
 #include "FileIO.h"
 #include "Mission.h" 
 #include "Blocks.h"
@@ -109,8 +110,14 @@ class Level
 			}
 	};
 
-void mapEditor (sf::RenderWindow &window, Level &level, sf::Sprite mapSprite)
+void mapEditor (sf::RenderWindow &window, Level &level, sf::Sprite mapSprite, char filename [])
 	{
+	sf::Font font;
+	font.loadFromFile ("Data/fnt/Bulgaria_Glorious_Cyr.ttf");
+	sf::Text text;
+	text.setFont (font);
+	text.setFillColor (sf::Color (31, 63, 191));
+
 	float tileList = 0;
 	int tile = 0, nTileLists = 1;
 
@@ -196,6 +203,9 @@ void mapEditor (sf::RenderWindow &window, Level &level, sf::Sprite mapSprite)
 		window.setView (cam.update (window, sf::Mouse::getPosition (window), MouseWheelPos - initMouseWheelPos, time));
 		window.clear ();
 
+		mapSprite.setColor (sf::Color::White);
+		level.Draw (window, mapSprite, cam.cam.getCenter (), cam.getZoom ());
+
 		if (cursor.x < 0 || cursor.x >= MAP_W*100.f ||
 			cursor.y < 0 || cursor.y >= MAP_H*100.f)
 			mapSprite.setColor (sf::Color::Red);
@@ -207,10 +217,17 @@ void mapEditor (sf::RenderWindow &window, Level &level, sf::Sprite mapSprite)
 			}
 
 		level.DrawBlock (window, mapSprite, sf::Vector2i (cursor/500.f), tile);
-		
-		mapSprite.setColor (sf::Color::White);
-		level.Draw (window, mapSprite, cam.cam.getCenter (), cam.getZoom ());
 
+		std::ostringstream str;
+		str << "Editing: " << filename << "\n\n[" << int (cursor.x/500.f);
+		str << "; " << int (cursor.y/500.f) << "]\n\n" << blocksNames [tile];
+
+		text.setString (str.str());
+		text.setPosition (cam.cam.getCenter () - sf::Vector2f (window.getSize ())/2.f/cam.getZoom());
+		text.setScale (sf::Vector2f (1.f, 1.f)/cam.getZoom());
+		
+
+		window.draw (text);
 		window.display ();
 		}
 
