@@ -29,7 +29,7 @@ void loop  (WindowParameters wp)
 	{
 	sf::RenderWindow window (sf::VideoMode (wp.vm.width, wp.vm.height), "", wp.Mode, wp.cs);
 	window.setFramerateLimit (wp.fpsLim);
-	std::cout << wp.cs.antialiasingLevel;
+
 	short int mode = 1;
 	while (mode != 0)
 		{
@@ -53,6 +53,10 @@ void SinglePlayer (sf::RenderWindow &window)
 	sf::Sprite map_sprite; map_sprite.setTexture (tx);
 	initGuns (guns);
 
+	Level level (0, 0);
+
+	//mapEditor (window, level, map_sprite);
+
 	//---------Objects list---------//
 
 	float snow [100] = {};
@@ -67,8 +71,6 @@ void SinglePlayer (sf::RenderWindow &window)
 
 	stickmans.push_back (new Player (stickman, guns, sf::Vector2f (500, 300), 80));
 	mapObjects.push_back (new ChristmasTree (tree, sf::Vector2f (600, 300), 20));
-
-	Level level (0, 0);
 
 	Camera camera (sf::FloatRect (0, 0, window.getSize().x, window.getSize().y));
 	

@@ -92,21 +92,35 @@ class Level
 			load (filename.c_str ());
 			}
 
-	void Draw (sf::RenderWindow &window, sf::Sprite map, sf::Vector2f center)
-		{
-		for (int x = int (center.x)/100 - 11; x < int (center.x)/100 + 12; x++)
-			for (int y = int (center.y)/100 - 6; y < int (center.y)/100 + 6; y++)
-				{
-				if (0 <= x && x < MAP_W)
-					if (0 <= y && y < MAP_H)
-						if (TileMap [y][x] != 0) 
-							{
-							map.setTextureRect (sf::IntRect (TileMap [y][x]*100 - 100, 0, 100, 100)); 
-							map.setPosition (x*100.f, y*100.f);
-							window.draw (map); 
-							}
-				}
-		}
+		void Draw (sf::RenderWindow &window, sf::Sprite map, sf::Vector2f center, float factor = 1)
+			{
+			for (int x = int (center.x)/100 - 11; x < int (center.x)/100 + 12; x++)
+				for (int y = int (center.y)/100 - 6; y < int (center.y)/100 + 6; y++)
+					if (0 <= x && x < MAP_W)
+						if (0 <= y && y < MAP_H)
+							if (TileMap [y] [x] != 0)
+								{
+								if (factor >= 1)
+									{
+									map.setTextureRect (sf::IntRect (TileMap [y] [x]*100 - 100, 0, 100, 100));
+									map.setScale (1.f, 1.f);
+									}
+								else if (factor >= 0.5f)
+									{
+									map.setTextureRect (sf::IntRect (TileMap [y] [x]*50 - 50, 100, 50, 50));
+									map.setScale (2.f, 2.f);
+									}
+								else
+									{
+									map.setTextureRect (sf::IntRect (TileMap [y] [x]*25 - 25, 150, 25, 25));
+									map.setScale (4.f, 4.f);
+									}
+
+								map.setPosition (x*100.f, y*100.f);
+								window.draw (map);
+								}
+		
+			}
 	};
 
 void mapEditor (sf::RenderWindow &window, Level level, sf::Sprite mapSprite)
@@ -122,7 +136,7 @@ void mapEditor (sf::RenderWindow &window, Level level, sf::Sprite mapSprite)
 	sf::Clock delayTimer;
 	float avgDelay = 0;
 
-	while (window.isOpen () && sf::Keyboard::isKeyPressed (sf::Keyboard::Escape))
+	while (window.isOpen () && !sf::Keyboard::isKeyPressed (sf::Keyboard::Escape))
 		{
 		//Time Block
 		float time = delayTimer.getElapsedTime ().asSeconds ();
@@ -170,14 +184,18 @@ void mapEditor (sf::RenderWindow &window, Level level, sf::Sprite mapSprite)
 		sf::Vector2f Pos = window.mapPixelToCoords (MousePos); //вектор, содержащий координаты позиции мыши, относительно карты
 
  	    //скроллинг карты
-		if (MousePos.x < 30)								    cam.cam.move (-1/zoom*time, 0);
-		if (MousePos.x > signed int (window.getSize ().x - 30)) cam.cam.move (1/zoom*time, 0);
-		if (MousePos.y < 30)								    cam.cam.move (0, -1/zoom*time);
-		if (MousePos.y > signed int (window.getSize ().y - 30)) cam.cam.move (0, 1/zoom*time);
+		if (MousePos.x < 30)								    cam.cam.move (-1/cam.getZoom()*time, 0);
+		if (MousePos.x > signed int (window.getSize ().x - 30)) cam.cam.move (1/cam.getZoom ()*time, 0);
+		if (MousePos.y < 30)								    cam.cam.move (0, -1/cam.getZoom ()*time);
+		if (MousePos.y > signed int (window.getSize ().y - 30)) cam.cam.move (0, 1/cam.getZoom ()*time);
 
 		//зумирование карты
+
+
+		// Drawing
 		window.setView (cam.update (window, sf::Mouse::getPosition (window), MouseWheelPos - initMouseWheelPos, time));
-		level.Draw (window, mapSprite, cam.cam.getCenter ());
+		window.clear ();
+		level.Draw (window, mapSprite, cam.cam.getCenter (), cam.getZoom ());
 
 		window.display ();
 		}
