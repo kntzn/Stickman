@@ -2,6 +2,7 @@
 #include <SFML/Graphics.hpp>
 #include "FileIO.h"
 #include "Mission.h" 
+#include "Blocks.h"
 
 #define MAP_W 500
 #define MAP_H 100
@@ -9,33 +10,6 @@
 sf::Color mapColors [] =
 	{
 	sf::Color (10, 10, 10)
-	};
-
-int Blocks  [][5][5] = 
-	{
-	0, 0, 0, 0, 0,
-	0, 0, 0, 0, 0,
-	0, 0, 0, 0, 0,
-	0, 0, 0, 0, 0,
-	0, 0, 0, 0, 0,
-
-	0, 0, 0, 0, 0,
-	0, 0, 0, 0, 0,
-	0, 0, 0, 0, 0,
-	0, 0, 0, 0, 0,
-	1, 1, 1, 1, 1,
-
-	0, 0, 0, 0, 0,
-	0, 0, 0, 0, 0,
-	0, 0, 0, 0, 0,
-	1, 0, 0, 0, 0,
-	1, 1, 1, 1, 1,
-
-	0, 0, 0, 0, 0,
-	0, 0, 0, 0, 0,
-	0, 0, 0, 0, 0,
-	1, 0, 1, 0, 1,
-	1, 1, 1, 1, 1,
 	};
 
 class Level
@@ -50,6 +24,19 @@ class Level
 				for (int y = 0; y < 5; y++)
 					{
 					TileMap [pos.y*5 + y] [pos.x*5 + x] = Blocks [block] [y] [x];
+					}
+			}
+
+		void DrawBlock (sf::RenderWindow &window, sf::Sprite &sprite, sf::Vector2i pos, int block)
+			{
+			for (int x = 0; x < 5; x++)
+				for (int y = 0; y < 5; y++)
+					{
+					sprite.setTextureRect (sf::IntRect (Blocks [block][y][x]*100-100, 0, 100, 100));
+					sprite.setScale (1.f, 1.f);
+					sprite.setPosition (x*100.f+pos.x*500.f, y*100.f+pos.y*500.f);
+
+					window.draw (sprite);
 					}
 			}
 
@@ -94,8 +81,8 @@ class Level
 
 		void Draw (sf::RenderWindow &window, sf::Sprite map, sf::Vector2f center, float factor = 1)
 			{
-			for (int x = int (center.x)/100 - 11; x < int (center.x)/100 + 12; x++)
-				for (int y = int (center.y)/100 - 6; y < int (center.y)/100 + 6; y++)
+			for (int x = int (center.x)/100 - int (11.f/factor); x < int (center.x)/100 + int (12.f/factor); x++)
+				for (int y = int (center.y)/100 - int (6.f/factor); y < int (center.y)/100 + int (6.f/factor); y++)
 					if (0 <= x && x < MAP_W)
 						if (0 <= y && y < MAP_H)
 							if (TileMap [y] [x] != 0)
@@ -119,19 +106,19 @@ class Level
 								map.setPosition (x*100.f, y*100.f);
 								window.draw (map);
 								}
-		
 			}
 	};
 
-void mapEditor (sf::RenderWindow &window, Level level, sf::Sprite mapSprite)
+void mapEditor (sf::RenderWindow &window, Level &level, sf::Sprite mapSprite)
 	{
-	float zoom = 1; //Множитель скорости
+	float tileList = 0;
+	int tile = 0, nTileLists = 1;
 
 	bool lMousePrsd = false, rMousePrsd = false;
 	float MouseWheelPos = 0;
 
 	bool windowFocus = true;
-	Camera cam (sf::FloatRect (0, 0, window.getSize().x, window.getSize().y));
+	Camera cam (sf::FloatRect (0, 0, float (window.getSize().x), float (window.getSize().y)));
 
 	sf::Clock delayTimer;
 	float avgDelay = 0;
@@ -179,24 +166,53 @@ void mapEditor (sf::RenderWindow &window, Level level, sf::Sprite mapSprite)
 				MouseWheelPos += windowEvent.mouseWheel.delta;
 			}
 
-		//Координаты мышки
-		sf::Vector2i MousePos = sf::Mouse::getPosition (window);   //вектор, содержащий координаты позиции мыши, относительно окна
-		sf::Vector2f Pos = window.mapPixelToCoords (MousePos); //вектор, содержащий координаты позиции мыши, относительно карты
+		// Mouse coords relative to window
+		sf::Vector2i MousePos = sf::Mouse::getPosition (window);
+		// Mouse coords relative to map
+		sf::Vector2f cursor = window.mapPixelToCoords (MousePos);
 
- 	    //скроллинг карты
-		if (MousePos.x < 30)								    cam.cam.move (-1/cam.getZoom()*time, 0);
-		if (MousePos.x > signed int (window.getSize ().x - 30)) cam.cam.move (1/cam.getZoom ()*time, 0);
-		if (MousePos.y < 30)								    cam.cam.move (0, -1/cam.getZoom ()*time);
-		if (MousePos.y > signed int (window.getSize ().y - 30)) cam.cam.move (0, 1/cam.getZoom ()*time);
+ 	    // Map scrolling
+		if (MousePos.x < 30)								    cam.cam.move (-500/cam.getZoom ()*time, 0);
+		if (MousePos.x > signed int (window.getSize ().x - 30)) cam.cam.move ( 500/cam.getZoom ()*time, 0);
+		if (MousePos.y < 30)								    cam.cam.move (0, -500/cam.getZoom ()*time);
+		if (MousePos.y > signed int (window.getSize ().y - 30)) cam.cam.move (0,  500/cam.getZoom ()*time);
 
-		//зумирование карты
+		// Choosing tile
+		if (sf::Keyboard::isKeyPressed (sf::Keyboard::Num1)) tile = 1 + int (tileList);
+		if (sf::Keyboard::isKeyPressed (sf::Keyboard::Num2)) tile = 2 + int (tileList);
+		if (sf::Keyboard::isKeyPressed (sf::Keyboard::Num3)) tile = 3 + int (tileList);
+		if (sf::Keyboard::isKeyPressed (sf::Keyboard::Num4)) tile = 4 + int (tileList);
+		if (sf::Keyboard::isKeyPressed (sf::Keyboard::Num5)) tile = 5 + int (tileList);
+		if (sf::Keyboard::isKeyPressed (sf::Keyboard::Num6)) tile = 6 + int (tileList);
+		if (sf::Keyboard::isKeyPressed (sf::Keyboard::Num7)) tile = 7 + int (tileList);
+		if (sf::Keyboard::isKeyPressed (sf::Keyboard::Num8)) tile = 8 + int (tileList);
+		if (sf::Keyboard::isKeyPressed (sf::Keyboard::Num9)) tile = 9 + int (tileList);
+		if (sf::Keyboard::isKeyPressed (sf::Keyboard::Num0)) tile = 0;
 
+		if (sf::Keyboard::isKeyPressed (sf::Keyboard::Comma)  && tileList > 1.f*time)              tileList -= 1.f*time;
+		if (sf::Keyboard::isKeyPressed (sf::Keyboard::Period) && tileList < nTileLists - 1.f*time) tileList += 1.f*time;
 
 		// Drawing
 		window.setView (cam.update (window, sf::Mouse::getPosition (window), MouseWheelPos - initMouseWheelPos, time));
 		window.clear ();
+
+		if (cursor.x < 0 || cursor.x >= MAP_W*100.f ||
+			cursor.y < 0 || cursor.y >= MAP_H*100.f)
+			mapSprite.setColor (sf::Color::Red);
+		else
+			{
+			mapSprite.setColor (sf::Color::Green);
+			if (lMousePrsd)
+				level.FillBlock (sf::Vector2i (cursor/500.f), tile);
+			}
+
+		level.DrawBlock (window, mapSprite, sf::Vector2i (cursor/500.f), tile);
+		
+		mapSprite.setColor (sf::Color::White);
 		level.Draw (window, mapSprite, cam.cam.getCenter (), cam.getZoom ());
 
 		window.display ();
 		}
+
+	level.RefreshPhysicalMap ();
 	}

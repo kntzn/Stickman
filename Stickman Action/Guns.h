@@ -104,7 +104,8 @@ class Gun
 		sf::IntRect bulTxtrRect;
 
 		// TIMERS
-		float reloadTimer = 0, shootTimer = 0, bulletsLeftInMagazine = magazine;
+		float reloadTimer = 0.f, shootTimer = 0.f;
+		int bulletsLeftInMagazine = magazine;
 		bool readyToFire = false;
 		float power = 0;
 

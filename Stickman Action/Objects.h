@@ -81,28 +81,28 @@ class Stickman: public Object
 				{
 				case Action::Stay:
 					hands.setTextureRect (sf::IntRect (270*(way), 60*guns [currentGun].getID (), 270*(1 - 2*int (way)), 60));
-					gunCharge.setTextureRect (sf::IntRect (270*(way)+270, 60*guns [currentGun].getID () + 30 - 30*guns [currentGun].rechargePercentage (), 270*(1 - 2*int (way)), 60*guns [currentGun].rechargePercentage ()));
+					gunCharge.setTextureRect (sf::IntRect (270*(way)+270, 60*guns [currentGun].getID () + 30 - 30*int (guns [currentGun].rechargePercentage ()), 270*(1 - 2*int (way)), 60*int (guns [currentGun].rechargePercentage ())));
 					break;
 				case Action::Walk:
 					hands.setTextureRect (sf::IntRect (270*(way), 60*guns [currentGun].getID (), 270*(1 - 2*int (way)), 60));
-					gunCharge.setTextureRect (sf::IntRect (270*(way)+270, 60*guns [currentGun].getID () + 30 - 30*guns [currentGun].rechargePercentage (), 270*(1 - 2*int (way)), 60*guns [currentGun].rechargePercentage ()));
+					gunCharge.setTextureRect (sf::IntRect (270*(way) +270, 60*guns [currentGun].getID () + 30 - 30*int (guns [currentGun].rechargePercentage ()), 270*(1 - 2*int (way)), 60*int (guns [currentGun].rechargePercentage ())));
 					break;
 				case Action::Run:
 					hands.setTextureRect (sf::IntRect (270*(way), 60*guns [currentGun].getID (), 270*(1 - 2*int (way)), 60));
-					gunCharge.setTextureRect (sf::IntRect (270*(way)+270, 60*guns [currentGun].getID () + 30 - 30*guns [currentGun].rechargePercentage (), 270*(1 - 2*int (way)), 60*guns [currentGun].rechargePercentage ()));
+					gunCharge.setTextureRect (sf::IntRect (270*(way) +270, 60*guns [currentGun].getID () + 30 - 30*int (guns [currentGun].rechargePercentage ()), 270*(1 - 2*int (way)), 60*int (guns [currentGun].rechargePercentage ())));
 					break;
 				case Action::Sprint:
 					hands.setTextureRect (sf::IntRect (270*(way), 60*guns [currentGun].getID (), 270*(1 - 2*int (way)), 60));
-					gunCharge.setTextureRect (sf::IntRect (270*(way)+270, 60*guns [currentGun].getID () + 30 - 30*guns [currentGun].rechargePercentage (), 270*(1 - 2*int (way)), 60*guns [currentGun].rechargePercentage ()));
+					gunCharge.setTextureRect (sf::IntRect (270*(way) +270, 60*guns [currentGun].getID () + 30 - 30*int (guns [currentGun].rechargePercentage ()), 270*(1 - 2*int (way)), 60*int (guns [currentGun].rechargePercentage ())));
 					break;
 				case Action::Jump:
 					hands.setTextureRect (sf::IntRect (270*(way), 60*guns [currentGun].getID (), 270*(1 - 2*int (way)), 60));
-					gunCharge.setTextureRect (sf::IntRect (270*(way)+270, 60*guns [currentGun].getID () + 30 - 30*guns [currentGun].rechargePercentage (), 270*(1 - 2*int (way)), 60*guns [currentGun].rechargePercentage ()));
+					gunCharge.setTextureRect (sf::IntRect (270*(way) +270, 60*guns [currentGun].getID () + 30 - 30*int (guns [currentGun].rechargePercentage ()), 270*(1 - 2*int (way)), 60*int (guns [currentGun].rechargePercentage ())));
 					break;
 				case Action::Fly:
 					hands.setTextureRect (sf::IntRect (270*(way), 60*guns [currentGun].getID (), 270*(1 - 2*int (way)), 60));
-					gunCharge.setTextureRect (sf::IntRect (270*(way)+270, 60*guns [currentGun].getID () + 30 - 30*guns [currentGun].rechargePercentage (), 270*(1 - 2*int (way)), 60*guns [currentGun].rechargePercentage ()));
-						break;
+					gunCharge.setTextureRect (sf::IntRect (270*(way) +270, 60*guns [currentGun].getID () + 30 - 30*int (guns [currentGun].rechargePercentage ()), 270*(1 - 2*int (way)), 60*int (guns [currentGun].rechargePercentage ())));
+					break;
 				default:
 					break;
 				}

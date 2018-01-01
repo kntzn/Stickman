@@ -55,7 +55,7 @@ void SinglePlayer (sf::RenderWindow &window)
 
 	Level level (0, 0);
 
-	//mapEditor (window, level, map_sprite);
+	mapEditor (window, level, map_sprite);
 
 	//---------Objects list---------//
 
@@ -72,7 +72,7 @@ void SinglePlayer (sf::RenderWindow &window)
 	stickmans.push_back (new Player (stickman, guns, sf::Vector2f (500, 300), 80));
 	mapObjects.push_back (new ChristmasTree (tree, sf::Vector2f (600, 300), 20));
 
-	Camera camera (sf::FloatRect (0, 0, window.getSize().x, window.getSize().y));
+	Camera camera (sf::FloatRect (0, 0, float (window.getSize().x), float (window.getSize().y)));
 	
 	//---------Variables---------//
 	// Timers
@@ -193,6 +193,7 @@ void SinglePlayer (sf::RenderWindow &window)
 			snow [i] += snowSpeed [i]*time;
 			
 			if (snow [i] > camera.cam.getCenter ().y+window.getSize ().y/2) snow [i] -= window.getSize ().y;
+			if (snow [i] < camera.cam.getCenter ().y-window.getSize ().y/2) snow [i] += window.getSize ().y;
 			}
 
 		window.setView (camera.PlayerCam (sf::Vector2f (thisPlayerPos.x, thisPlayerPos.y-200)));
@@ -212,10 +213,10 @@ void SinglePlayer (sf::RenderWindow &window)
 			if (onScreen (bullets [i].getPos (), window, camera))
 				bullets [i].Draw (window, time);
 		
-		for (int i = (camera.cam.getCenter ().x-920)/20; i < (camera.cam.getCenter ().x+920)/20; i++)
+		for (int i = int (camera.cam.getCenter ().x-920)/20; i < int (camera.cam.getCenter ().x+920)/20; i++)
 			{
 			sf::CircleShape snowflake;
-			snowflake.setPosition (i*20, snow [(i+100)%100]);
+			snowflake.setPosition (i*20.f, snow [(i+100)%100]);
 			snowflake.setRadius (2);
 			snowflake.setFillColor (sf::Color::White);
 			window.draw (snowflake);
