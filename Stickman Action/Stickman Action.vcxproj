@@ -152,13 +152,13 @@
     <ClCompile Include="main.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Blocks.h" />
     <ClInclude Include="Camera.h" />
     <ClInclude Include="Display.h" />
     <ClInclude Include="Draw.h" />
     <ClInclude Include="FileIO.h" />
     <ClInclude Include="Guns.h" />
     <ClInclude Include="Map.h" />
-    <ClInclude Include="Materials.h" />
     <ClInclude Include="Menu.h" />
     <ClInclude Include="Mission.h" />
     <ClInclude Include="Object.h" />
