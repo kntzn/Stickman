@@ -4,6 +4,18 @@
 #include "Mission.h"
 #include "Guns.h"
 
+namespace npcAction
+	{
+	enum
+		{
+		Stay,
+		Walk,
+		Back,
+		Shoot,
+		Rush
+		};
+	}
+
 class Stickman: public Object
 	{
 	protected:
@@ -25,8 +37,8 @@ class Stickman: public Object
 			gunsTexture.loadFromImage (gunImage);
 			}
 
-		virtual void Control (sf::Vector2f target, float time) = 0;
-		void CheckBorders (Level &level, float time)
+		virtual void Control (Level &lvl, sf::Vector2f target, float time) = 0;
+		int CheckBorders (Level &level, float time)
 			{
 			if (0 <= (position - size/2.f).x && 0 <= (position - size/2.f).y &&
 				(position + size/2.f).x < MAP_W*100.f && (position + size/2.f).y < MAP_H*100.f)
@@ -55,14 +67,17 @@ class Stickman: public Object
 						{
 						velocity.x *= -0.3f;
 						position.x = int ((position.x + size.x/2)/100)*100 - size.x/2;
+						return 2;
 						}
 					if (level.PhysicalMap [int (position.y)/100 - i - 1] [int ((position.x - size.x/2)/100)] == 1)
 						{
 						velocity.x *= -0.3f;
 						position.x = int ((position.x - size.x/2)/100)*100 + 100 + size.x/2;
+						return 3;
 						}
 					}
 				}
+			return 1;
 			}
 
 	public:
@@ -136,8 +151,10 @@ class Player: public Stickman
 	private:
 		bool lastTriggerState = false;
 
-		void Control (sf::Vector2f target, float time)
+		void Control (Level &lvl, sf::Vector2f target, float time)
 			{
+			CheckBorders (lvl, time);
+
 			// Toolbar switch
 			if (sf::Keyboard::isKeyPressed (sf::Keyboard::Num1))
 				{
@@ -243,13 +260,63 @@ class NPC: public Stickman
 	private:
 		int fraction = 0;
 		
-		void Control (sf::Vector2f target, float time)
+		void Control (Level &lvl, sf::Vector2f target, float time)
 			{
-			
+			sf::Vector2f trgDiff = target - getBulletStart();
+			// Logic
+			switch (type)
+				{
+				case objectType::citizen:
+					{
+					if (CheckBorders (lvl, time) > 1)
+						{
+						if (way == 1)
+							{
+							way = 0;
+							velocity.x = 2.5f;
+							handAngle = -Pi/2.f;
+							}
+						else
+							{
+							way = 1;
+							velocity.x = -2.5f;
+							handAngle = Pi/2.f;
+							}
+						}
+					break;
+					}
+				default:
+					break;
+				}
+
+			// Actions
+			if (onGround)
+				{
+				if (fabs (velocity.x) > 11)
+					action = Action::Sprint;
+				else if (fabs (velocity.x) > 5)
+					action = Action::Run;
+				else if (fabs (velocity.x) <= 5)
+					action = Action::Walk;
+				else
+					action = Action::Stay;
+				}
+			else
+				{
+				if (velocity.y < -2.5f) { action = Action::Jump; }
+				else { action = Action::Fly; }
+				}
 			}
 	public:
 		NPC (sf::Image &image, sf::Image &gunImage, sf::Vector2f POS, float M, int npcId, int FRACTION, bool WAY):Stickman (image, gunImage, POS, M)
 			{
+			if (npcId == objectType::citizen)
+				{
+				velocity.x = 2.5f - 5.f*WAY;
+				handAngle = Pi*WAY-Pi/2.f;
+				}
+
+
 			type = npcId;
 			way = WAY;
 			fraction = FRACTION;
@@ -259,9 +326,6 @@ class NPC: public Stickman
 class ChristmasTree: public Object
 	{
 	public:
-		void Control (sf::Vector2f target, float time)
-			{}
-
 		void Draw (sf::RenderWindow &window, float time)
 			{
 			sf::Sprite sp;
@@ -269,10 +333,9 @@ class ChristmasTree: public Object
 			sp.setPosition (position);
 			sp.setOrigin (94, 311);
 			window.draw (sp);
-			//Draw::SimpleTxtr (window, texture, sf::IntRect (0, 0, 188, 311), position);
 			}
 
-		void CheckBorders (Level &level, float time)
+		int CheckBorders (Level &level, float time)
 			{
 			// floor
 			if (level.PhysicalMap [int (position.y/100)] [int ((position.x - 30)/100)] == 1 || level.PhysicalMap [int (position.y/100)] [int ((position.x + 30)/100)] == 1)
@@ -298,14 +361,24 @@ class ChristmasTree: public Object
 					{
 					velocity.x *= -0.3f;
 					position.x = int ((position.x + size.x/2)/100)*100 - size.x/2;
+					return 2;
 					}
 				if (level.PhysicalMap [int (position.y)/100 - i - 1] [int ((position.x - size.x/2)/100)] == 1)
 					{
 					velocity.x *= -0.3f;
 					position.x = int ((position.x - size.x/2)/100)*100 + 100 + size.x/2;
+					return 3;
 					}
 				}
+
+			return 1;
 			}
+
+		void Control (Level &lvl, sf::Vector2f target, float time)
+			{
+			CheckBorders (lvl, time);
+			}
+
 
 		ChristmasTree (sf::Image &image, sf::Vector2f POS, float M): Object (image, POS, M)
 			{

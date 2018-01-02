@@ -55,23 +55,34 @@ class Bullet: public Object
 			maxDist = maxD;
 			}
 
-		void Control (sf::Vector2f target, float time)
-			{
-			if (distance > maxDist)
-				hp = 0;
-				
-			distance += vecL (velocity)*time;
-			}
-
-		void CheckBorders (Level &level, float time)
+		int CheckBorders (Level &level, float time)
 			{
 			if (0 <= position.x && 0 <= position.y && position.x < MAP_W*100.f && position.y < MAP_H*100.f)
 				{
 				if (level.PhysicalMap [int (position.y/100)] [int (position.x/100)])
-					hp = 0;			
+					{
+					hp = 0;
+					return true;
+					}
 				}
 			else
+				{
 				hp = 0;
+				return true;
+				}
+
+			return false;
+			}
+
+
+		void Control (Level &lvl, sf::Vector2f target, float time)
+			{
+			CheckBorders (lvl, time);
+
+			if (distance > maxDist)
+				hp = 0;
+
+			distance += vecL (velocity)*time;
 			}
 
 		void Draw (sf::RenderWindow &window, float time)
