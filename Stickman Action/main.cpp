@@ -3,10 +3,13 @@
 #include <SFML/Network.hpp>
 #include <iostream>
 #include <list>
+#include <thread>
 
 #include "Display.h"
 #include "Draw.h"
 #include "Objects.h"
+
+void objectsInteraction (sf::RenderWindow &window, Level level, std::vector <Stickman*> &stickmans, Bullet bullets [1000], size_t nBullets, std::vector <Object*> &mapObjects, sf::Vector2f &thisPlayerPos, bool lMousePrsd, float time);
 
 void setup ();
 void loop  (WindowParameters wp);
@@ -37,6 +40,51 @@ void loop  (WindowParameters wp)
 		}
 	}
 
+void objectsInteraction (sf::RenderWindow &window, Level level, std::vector <Stickman*> &stickmans, Bullet bullets [1000], size_t nBullets, 
+						 std::vector <Object*> &mapObjects, sf::Vector2f &thisPlayerPos, bool lMousePrsd, float time)
+	{
+	// Stickmans
+	for (auto i = stickmans.begin (); i != stickmans.end ();)
+		{
+		Stickman *a = *i;
+
+		if (a->getType () == objectType::player)
+			{
+			thisPlayerPos = a->getPos ();
+
+			a->Update (level, time, sf::Vector2f (sf::Mouse::getPosition (window))*1920.f/float (window.getSize ().x), lMousePrsd);
+			}
+		else
+			a->Update (level, time, sf::Vector2f (sf::Mouse::getPosition (window))*1920.f/float (window.getSize ().x));
+
+		if (a->isShoot ())
+			CreateBulletsFromGun (bullets+nBullets, nBullets, a->getBulletStart (), a->getHandAngle (), a->getDisp (), a->getGun (), a->getVel ());
+
+		if (!a->alive ())
+			{
+			i = stickmans.erase (i);
+			delete a;
+			}
+		else
+			i++;
+		}
+
+	// Bullets
+	for (int i = 0; i < nBullets; i++)
+		{
+		bullets [i].Update (level, time);
+
+		if (!bullets [i].alive ())
+			{
+			bullets [i] = bullets [nBullets-1];
+			nBullets--;
+			}
+		}
+
+	for (auto a: mapObjects)
+		a->Update (level, time);
+	};
+
 void SinglePlayer (sf::RenderWindow &window)
 	{
 	//---------Loading img---------//
@@ -66,7 +114,7 @@ void SinglePlayer (sf::RenderWindow &window)
 
 	std::vector <Stickman*> stickmans;
 	Bullet bullets [1000];
-	int nBullets = 0;
+	size_t nBullets = 0;
 	std::vector <Object*> mapObjects;
 
 	stickmans.push_back (new Player (stickman, guns, sf::Vector2f (500, 300), 80));
@@ -146,46 +194,10 @@ void SinglePlayer (sf::RenderWindow &window)
 		// Physics
 		if (windowFocus)
 			{
-			// Stickmans
-			for (auto i = stickmans.begin (); i != stickmans.end ();)
-				{
-				Stickman *a = *i;
+			std::thread physics (objectsInteraction, std::ref (window), level, std::ref (stickmans), bullets, nBullets,
+								                     std::ref (mapObjects), std::ref (thisPlayerPos), lMousePrsd, time);
 
-				if (a->getType () == objectType::player)
-					{
-					thisPlayerPos = a->getPos ();
-
-					a->Update (level, time, sf::Vector2f (sf::Mouse::getPosition (window))*1920.f/float (window.getSize ().x), lMousePrsd);
-					}
-				else
-					a->Update (level, time, sf::Vector2f (sf::Mouse::getPosition (window))*1920.f/float (window.getSize ().x));
-
-				if (a->isShoot ())
-					CreateBulletsFromGun (bullets+nBullets, nBullets, a->getBulletStart (), a->getHandAngle (), a->getDisp (), a->getGun (), a->getVel ());
-
-				if (!a->alive ())
-					{
-					i = stickmans.erase (i);
-					delete a;
-					}
-				else
-					i++;
-				}
-
-			// Bullets
-			for (int i = 0; i < nBullets; i++)
-				{
-				bullets [i].Update (level, time);
-
-				if (!bullets [i].alive ())
-					{
-					bullets [i] = bullets [nBullets-1];
-					nBullets--;
-					}
-				}
-
-			for (auto a: mapObjects)
-				a->Update (level, time);
+			physics.join ();
 			}
 
 		// Snowflakes

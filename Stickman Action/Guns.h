@@ -239,7 +239,7 @@ class Gun
 			}
 	};
 
-	void CreateBulletsFromGun (Bullet* empty, int &id, sf::Vector2f position, float angle, float currentDisp, Gun gun, sf::Vector2f additionalVel)
+	void CreateBulletsFromGun (Bullet* empty, size_t &id, sf::Vector2f position, float angle, float currentDisp, Gun gun, sf::Vector2f additionalVel)
 	{
 	for (int i = 0; i < gun.nBulletsPerShot(); i++)
 		{
