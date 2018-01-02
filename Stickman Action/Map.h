@@ -18,6 +18,7 @@ class Level
 	public:
 		int TileMap     [MAP_H][MAP_W] = {};
 		int PhysicalMap [MAP_H][MAP_W] = {};
+		int BlockMap    [MAP_H/5] [MAP_W/5] = {};
 
 		void FillBlock (sf::Vector2i pos, int block)
 			{
@@ -26,6 +27,8 @@ class Level
 					{
 					TileMap [pos.y*5 + y] [pos.x*5 + x] = Blocks [block] [y] [x];
 					}
+
+			BlockMap [pos.y] [pos.x] = block;
 			}
 
 		void DrawBlock (sf::RenderWindow &window, sf::Sprite &sprite, sf::Vector2i pos, int block)
@@ -47,19 +50,21 @@ class Level
 				for (int y = 0; y < MAP_H; y++)
 					{
 					if (TileMap[y][x] == 0) PhysicalMap [y][x] = 0;
-					if (TileMap[y][x] == 1) PhysicalMap [y][x] = 1;
+					else if (TileMap[y][x] == 1) PhysicalMap [y][x] = 1;
+					else if (TileMap [y] [x] < 7) PhysicalMap [y] [x] = 0;
+					else if (TileMap [y] [x] < 9) PhysicalMap [y] [x] = 1;
 					}
 			}
 
 		void load (const char filename [])
-			{		
+			{
 			char* buf = nullptr;
 			size_t bufSize = 0;
 			loadFromFile (filename, buf, bufSize, true);
 
 			size_t cursor = 0;
-			for (int y = 0; y < MAP_H; y++)
-				for (int x = 0; x < MAP_W && cursor < bufSize; x++)
+			for (int y = 0; y < MAP_H/5; y++)
+				for (int x = 0; x < MAP_W/5 && cursor < bufSize; x++)
 					{
 					FillBlock (sf::Vector2i (x, y), atoi (buf+cursor));
 					cursor += std::to_string (atoi (buf+cursor)).size ()+1;
@@ -70,12 +75,33 @@ class Level
 			RefreshPhysicalMap ();
 			}
 	
+		void save (const char filename [])
+			{
+			char* buf;
+			size_t cursor = 0, bufSize = MAP_H*MAP_W/25*2;
+			buf = (char*) calloc (bufSize*2, sizeof (char));
+
+			for (int y = 0; y < MAP_H/5; y++)
+				for (int x = 0; x < MAP_W/5; x++)
+					{
+					std::string s = std::to_string (BlockMap [y] [x]) + " ";
+					for (int i = 0; i < s.size(); i++)
+						*(buf+cursor+i) = s[i];
+
+					cursor += s.size();
+					}
+
+			saveToFile (filename, buf, bufSize);
+
+			free (buf);
+			}
+
 		Level (unsigned int LVL, int FRACTION)
 			{
 			std::string filename;
 			filename += "Data/map/";
 			filename += std::to_string (LVL);
-			filename += ".ini";
+			filename += ".txt";
 			
 			load (filename.c_str ());
 			}
@@ -185,15 +211,15 @@ void mapEditor (sf::RenderWindow &window, Level &level, sf::Sprite mapSprite, ch
 		if (MousePos.y > signed int (window.getSize ().y - 30)) cam.cam.move (0,  500/cam.getZoom ()*time);
 
 		// Choosing tile
-		if (sf::Keyboard::isKeyPressed (sf::Keyboard::Num1)) tile = 1 + int (tileList);
-		if (sf::Keyboard::isKeyPressed (sf::Keyboard::Num2)) tile = 2 + int (tileList);
-		if (sf::Keyboard::isKeyPressed (sf::Keyboard::Num3)) tile = 3 + int (tileList);
-		if (sf::Keyboard::isKeyPressed (sf::Keyboard::Num4)) tile = 4 + int (tileList);
-		if (sf::Keyboard::isKeyPressed (sf::Keyboard::Num5)) tile = 5 + int (tileList);
-		if (sf::Keyboard::isKeyPressed (sf::Keyboard::Num6)) tile = 6 + int (tileList);
-		if (sf::Keyboard::isKeyPressed (sf::Keyboard::Num7)) tile = 7 + int (tileList);
-		if (sf::Keyboard::isKeyPressed (sf::Keyboard::Num8)) tile = 8 + int (tileList);
-		if (sf::Keyboard::isKeyPressed (sf::Keyboard::Num9)) tile = 9 + int (tileList);
+		if (sf::Keyboard::isKeyPressed (sf::Keyboard::Num1)) tile = 1 + int (tileList)*9;
+		if (sf::Keyboard::isKeyPressed (sf::Keyboard::Num2)) tile = 2 + int (tileList)*9;
+		if (sf::Keyboard::isKeyPressed (sf::Keyboard::Num3)) tile = 3 + int (tileList)*9;
+		if (sf::Keyboard::isKeyPressed (sf::Keyboard::Num4)) tile = 4 + int (tileList)*9;
+		if (sf::Keyboard::isKeyPressed (sf::Keyboard::Num5)) tile = 5 + int (tileList)*9;
+		if (sf::Keyboard::isKeyPressed (sf::Keyboard::Num6)) tile = 6 + int (tileList)*9;
+		if (sf::Keyboard::isKeyPressed (sf::Keyboard::Num7)) tile = 7 + int (tileList)*9;
+		if (sf::Keyboard::isKeyPressed (sf::Keyboard::Num8)) tile = 8 + int (tileList)*9;
+		if (sf::Keyboard::isKeyPressed (sf::Keyboard::Num9)) tile = 9 + int (tileList)*9;
 		if (sf::Keyboard::isKeyPressed (sf::Keyboard::Num0)) tile = 0;
 
 		if (sf::Keyboard::isKeyPressed (sf::Keyboard::Comma)  && tileList > 1.f*time)              tileList -= 1.f*time;
@@ -231,5 +257,6 @@ void mapEditor (sf::RenderWindow &window, Level &level, sf::Sprite mapSprite, ch
 		window.display ();
 		}
 
+	level.save (filename);
 	level.RefreshPhysicalMap ();
 	}

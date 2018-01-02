@@ -55,7 +55,7 @@ void SinglePlayer (sf::RenderWindow &window)
 
 	Level level (0, 0);
 
-	mapEditor (window, level, map_sprite, "Data/map/0.ini");
+	mapEditor (window, level, map_sprite, "Data/map/0.txt");
 
 	//---------Objects list---------//
 

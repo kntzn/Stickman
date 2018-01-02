@@ -44,34 +44,33 @@ int Blocks [] [5] [5] =
 	1, 1, 1, 1, 1,
 	1, 1, 1, 1, 1,
 	1, 1, 1, 1, 1,
-	// Empty
-	0, 0, 0, 0, 0,
-	0, 0, 0, 0, 0,
-	0, 0, 0, 0, 0,
-	0, 0, 0, 0, 0,
-	0, 0, 0, 0, 0,
-	// Empty
-	0, 0, 0, 0, 0,
-	0, 0, 0, 0, 0,
-	0, 0, 0, 0, 0,
-	0, 0, 0, 0, 0,
-	0, 0, 0, 0, 0,
-	// Empty
-	0, 0, 0, 0, 0,
-	0, 0, 0, 0, 0,
-	0, 0, 0, 0, 0,
-	0, 0, 0, 0, 0,
-	0, 0, 0, 0, 0,
-	// Empty
-	0, 0, 0, 0, 0,
-	0, 0, 0, 0, 0,
-	0, 0, 0, 0, 0,
-	0, 0, 0, 0, 0,
-	0, 0, 0, 0, 0,
-
+	// Vent to simple locked door pad
+	3, 3, 7, 2, 2,
+	3, 3, 7, 2, 2,
+	3, 3, 7, 2, 2,
+	3, 3, 7, 2, 2,
+	1, 1, 1, 1, 1,
+	// Simple to vent locked door pad
+	2, 2, 8, 3, 3,
+	2, 2, 8, 3, 3,
+	2, 2, 8, 3, 3,
+	2, 2, 8, 3, 3,
+	1, 1, 1, 1, 1,
+	// Vent block
+	3, 3, 3, 3, 3,
+	3, 3, 3, 3, 3,
+	3, 3, 3, 3, 3,
+	3, 3, 3, 3, 3,
+	3, 3, 3, 3, 3,
+	// Vent pad
+	3, 3, 3, 3, 3,
+	3, 3, 3, 3, 3,
+	3, 3, 3, 3, 3,
+	3, 3, 3, 3, 3,
+	1, 1, 1, 1, 1,
 	};
 
-char blocksNames [] [256] =
+char blocksNames [] [32] =
 	{
 	"Empty",
 	"Basic pad",
@@ -79,5 +78,9 @@ char blocksNames [] [256] =
 	"Vent pad",
 	"Vent to basic pad",
 	"Basic to vent pad",
-	"Filled block"
+	"Filled block",
+	"Vent to simple locked door pad",
+	"Simple to vent locked door pad",
+	"Vent block",
+	"Vent pad"
 	};
