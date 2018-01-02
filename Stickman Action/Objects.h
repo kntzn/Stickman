@@ -28,35 +28,39 @@ class Stickman: public Object
 		virtual void Control (sf::Vector2f target, float time) = 0;
 		void CheckBorders (Level &level, float time)
 			{
-			// floor
-			if (level.PhysicalMap [int (position.y/100)] [int ((position.x - 30)/100)] == 1 || level.PhysicalMap [int (position.y/100)] [int ((position.x + 30)/100)] == 1)
+			if (0 <= (position - size/2.f).x && 0 <= (position - size/2.f).y &&
+				(position + size/2.f).x < MAP_W*100.f && (position + size/2.f).y < MAP_H*100.f)
 				{
-				position.y = int (position.y/100)*100.f;
-				velocity.y = 0;
-				onGround = true;
-				}
-			else
-				onGround = false;
-
-			// ceilling
-			if (level.PhysicalMap [int ((position.y - size.y)/100)] [int (position.x/100)] == 1)
-				{
-				position.y = int ((position.y)/100)*100.f + int (size.y)%100;
-				velocity *= -0.8f;
-				}
-
-			// side borders
-			for (int i = 0; i < int (size.y + 99)/100; i++)
-				{
-				if (level.PhysicalMap [int (position.y)/100 - i - 1] [int ((position.x + size.x/2)/100)] == 1)
+				// floor
+				if (level.PhysicalMap [int (position.y/100)] [int ((position.x - 30)/100)] == 1 || level.PhysicalMap [int (position.y/100)] [int ((position.x + 30)/100)] == 1)
 					{
-					velocity.x *= -0.3f;
-					position.x = int ((position.x + size.x/2)/100)*100 - size.x/2;
+					position.y = int (position.y/100)*100.f;
+					velocity.y = 0;
+					onGround = true;
 					}
-				if (level.PhysicalMap [int (position.y)/100 - i - 1] [int ((position.x - size.x/2)/100)] == 1)
+				else
+					onGround = false;
+
+				// ceilling
+				if (level.PhysicalMap [int ((position.y - size.y)/100)] [int (position.x/100)] == 1)
 					{
-					velocity.x *= -0.3f;
-					position.x = int ((position.x - size.x/2)/100)*100 + 100 + size.x/2;
+					position.y = int ((position.y)/100)*100.f + int (size.y)%100;
+					velocity *= -0.8f;
+					}
+
+				// side borders
+				for (int i = 0; i < int (size.y + 99)/100; i++)
+					{
+					if (level.PhysicalMap [int (position.y)/100 - i - 1] [int ((position.x + size.x/2)/100)] == 1)
+						{
+						velocity.x *= -0.3f;
+						position.x = int ((position.x + size.x/2)/100)*100 - size.x/2;
+						}
+					if (level.PhysicalMap [int (position.y)/100 - i - 1] [int ((position.x - size.x/2)/100)] == 1)
+						{
+						velocity.x *= -0.3f;
+						position.x = int ((position.x - size.x/2)/100)*100 + 100 + size.x/2;
+						}
 					}
 				}
 			}
@@ -81,7 +85,7 @@ class Stickman: public Object
 				{
 				case Action::Stay:
 					hands.setTextureRect (sf::IntRect (270*(way), 60*guns [currentGun].getID (), 270*(1 - 2*int (way)), 60));
-					gunCharge.setTextureRect (sf::IntRect (270*(way) +270, 60*guns [currentGun].getID () + int (30 - 30*guns [currentGun].rechargePercentage ()), 270*(1 - 2*int (way)), int (60*guns [currentGun].rechargePercentage ())));
+					gunCharge.setTextureRect (sf::IntRect (270*(way) + 270, 60*guns [currentGun].getID () + int (30 - 30*guns [currentGun].rechargePercentage ()), 270*(1 - 2*int (way)), int (60*guns [currentGun].rechargePercentage ())));
 					break;
 				case Action::Walk:
 					hands.setTextureRect (sf::IntRect (270*(way), 60*guns [currentGun].getID (), 270*(1 - 2*int (way)), 60));

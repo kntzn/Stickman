@@ -65,10 +65,13 @@ class Bullet: public Object
 
 		void CheckBorders (Level &level, float time)
 			{
-			if (level.PhysicalMap [int (position.y/100)] [int (position.x/100)])
+			if (0 <= position.x && 0 <= position.y && position.x < MAP_W*100.f && position.y < MAP_H*100.f)
 				{
-				hp = 0;
+				if (level.PhysicalMap [int (position.y/100)] [int (position.x/100)])
+					hp = 0;			
 				}
+			else
+				hp = 0;
 			}
 
 		void Draw (sf::RenderWindow &window, float time)
@@ -210,7 +213,7 @@ class Gun
 		// Returns percentage of charge
 		float rechargePercentage ()
 			{
-			return (reloadTime-reloadTimer)/reloadTime;
+			return (reloadTime-reloadTimer)/reloadTime -0.01f;
 			}
 		// Returns type of trigger
 		int getTriggerType ()

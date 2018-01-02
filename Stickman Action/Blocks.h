@@ -71,7 +71,7 @@ int Blocks [] [5] [5] =
 
 	};
 
-char blocksNames [] [256] =
+char blocksNames [] [32] =
 	{
 	"Empty",
 	"Basic pad",
