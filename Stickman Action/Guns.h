@@ -42,6 +42,7 @@ class Bullet: public Object
 	private:
 		sf::IntRect txtr;
 		float distance = 0, maxDist = 0;
+		int typeOfOwner = 0;
 	public:
 		Bullet ()
 			{
@@ -55,20 +56,33 @@ class Bullet: public Object
 			maxDist = maxD;
 			}
 
-		void Control (sf::Vector2f target, float time)
+		int CheckBorders (Level &level, float time)
 			{
-			if (distance > maxDist)
-				hp = 0;
-				
-			distance += vecL (velocity)*time;
-			}
-
-		void CheckBorders (Level &level, float time)
-			{
-			if (level.PhysicalMap [int (position.y/100)] [int (position.x/100)])
+			if (0 <= position.x && 0 <= position.y && position.x < MAP_W*100.f && position.y < MAP_H*100.f)
+				{
+				if (level.PhysicalMap [int (position.y/100)] [int (position.x/100)])
+					{
+					hp = 0;
+					return true;
+					}
+				}
+			else
 				{
 				hp = 0;
+				return true;
 				}
+
+			return false;
+			}
+
+		void Control (Level &lvl, sf::Vector2f target, float time)
+			{
+			CheckBorders (lvl, time);
+
+			if (distance > maxDist)
+				hp = 0;
+
+			distance += vecL (velocity)*time;
 			}
 
 		void Draw (sf::RenderWindow &window, float time)
@@ -82,12 +96,15 @@ class Bullet: public Object
 			window.draw (cs);*/
 			}
 
-		void setInitParam (sf::Vector2f pos, sf::Vector2f vel, float ang)
+		void setInitParam (sf::Vector2f pos, sf::Vector2f vel, float ang, int owner)
 			{
 			position = pos;
 			velocity = vel;
 			angle = ang;
+			typeOfOwner = owner;
 			}
+
+		int getOwnerType () { return typeOfOwner; }
 	};
 
 class Gun
@@ -210,7 +227,7 @@ class Gun
 		// Returns percentage of charge
 		float rechargePercentage ()
 			{
-			return (reloadTime-reloadTimer)/reloadTime;
+			return (reloadTime-reloadTimer)/reloadTime -0.01f;
 			}
 		// Returns type of trigger
 		int getTriggerType ()
@@ -226,21 +243,21 @@ class Gun
 			bulletsLeftInMagazine--;
 			}
 
-		Bullet getBullet (sf::Vector2f position, float angle, float currentDisp, sf::Vector2f additionalVel = sf::Vector2f (0, 0))
+		Bullet getBullet (sf::Vector2f position, float angle, float currentDisp, sf::Vector2f additionalVel = sf::Vector2f (0, 0), int owner = 0)
 			{
 			float disp = rangeRand (-currentDisp-dispersion, currentDisp+dispersion);
 			bullet.setInitParam (position, 
 								 sf::Vector2f (bulletSpeed*sin (-angle-disp)*power, bulletSpeed*cos (-angle-disp)*power),
-								 -(angle+disp));
+								 -(angle+disp), owner);
 			return bullet;
 			}
 	};
 
-	void CreateBulletsFromGun (Bullet* empty, int &id, sf::Vector2f position, float angle, float currentDisp, Gun gun, sf::Vector2f additionalVel)
+	void CreateBulletsFromGun (Bullet* empty, int &id, sf::Vector2f position, float angle, float currentDisp, Gun gun, sf::Vector2f additionalVel, int owner = 0)
 	{
 	for (int i = 0; i < gun.nBulletsPerShot(); i++)
 		{
-		*empty = gun.getBullet (position, angle, currentDisp, additionalVel);
+		*empty = gun.getBullet (position, angle, currentDisp, additionalVel, owner);
 		id++;
 		}	
 	}

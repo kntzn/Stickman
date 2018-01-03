@@ -4,6 +4,19 @@
 #include "Mission.h"
 #include "Guns.h"
 
+namespace npcAction
+	{
+	enum
+		{
+		Stay,
+		Walk,
+		Run,
+		Back,
+		Shoot,
+		Rush
+		};
+	}
+
 class Stickman: public Object
 	{
 	protected:
@@ -25,40 +38,47 @@ class Stickman: public Object
 			gunsTexture.loadFromImage (gunImage);
 			}
 
-		virtual void Control (sf::Vector2f target, float time) = 0;
-		void CheckBorders (Level &level, float time)
+		virtual void Control (Level &lvl, sf::Vector2f target, float time) = 0;
+		int CheckBorders (Level &level, float time)
 			{
-			// floor
-			if (level.PhysicalMap [int (position.y/100)] [int ((position.x - 30)/100)] == 1 || level.PhysicalMap [int (position.y/100)] [int ((position.x + 30)/100)] == 1)
+			if (0 <= (position - size/2.f).x && 0 <= (position - size/2.f).y &&
+				(position + size/2.f).x < MAP_W*100.f && (position + size/2.f).y < MAP_H*100.f)
 				{
-				position.y = int (position.y/100)*100.f;
-				velocity.y = 0;
-				onGround = true;
-				}
-			else
-				onGround = false;
-
-			// ceilling
-			if (level.PhysicalMap [int ((position.y - size.y)/100)] [int (position.x/100)] == 1)
-				{
-				position.y = int ((position.y)/100)*100.f + int (size.y)%100;
-				velocity *= -0.8f;
-				}
-
-			// side borders
-			for (int i = 0; i < int (size.y + 99)/100; i++)
-				{
-				if (level.PhysicalMap [int (position.y)/100 - i - 1] [int ((position.x + size.x/2)/100)] == 1)
+				// floor
+				if (level.PhysicalMap [int (position.y/100)] [int ((position.x - 30)/100)] == 1 || level.PhysicalMap [int (position.y/100)] [int ((position.x + 30)/100)] == 1)
 					{
-					velocity.x *= -0.3f;
-					position.x = int ((position.x + size.x/2)/100)*100 - size.x/2;
+					position.y = int (position.y/100)*100.f;
+					velocity.y = 0;
+					onGround = true;
 					}
-				if (level.PhysicalMap [int (position.y)/100 - i - 1] [int ((position.x - size.x/2)/100)] == 1)
+				else
+					onGround = false;
+
+				// ceilling
+				if (level.PhysicalMap [int ((position.y - size.y)/100)] [int (position.x/100)] == 1)
 					{
-					velocity.x *= -0.3f;
-					position.x = int ((position.x - size.x/2)/100)*100 + 100 + size.x/2;
+					position.y = int ((position.y)/100)*100.f + int (size.y)%100;
+					velocity *= -0.8f;
+					}
+
+				// side borders
+				for (int i = 0; i < int (size.y + 99)/100; i++)
+					{
+					if (level.PhysicalMap [int (position.y)/100 - i - 1] [int ((position.x + size.x/2)/100)] == 1)
+						{
+						velocity.x *= -0.3f;
+						position.x = int ((position.x + size.x/2)/100)*100 - size.x/2;
+						return 2;
+						}
+					if (level.PhysicalMap [int (position.y)/100 - i - 1] [int ((position.x - size.x/2)/100)] == 1)
+						{
+						velocity.x *= -0.3f;
+						position.x = int ((position.x - size.x/2)/100)*100 + 100 + size.x/2;
+						return 3;
+						}
 					}
 				}
+			return 1;
 			}
 
 	public:
@@ -81,7 +101,7 @@ class Stickman: public Object
 				{
 				case Action::Stay:
 					hands.setTextureRect (sf::IntRect (270*(way), 60*guns [currentGun].getID (), 270*(1 - 2*int (way)), 60));
-					gunCharge.setTextureRect (sf::IntRect (270*(way) +270, 60*guns [currentGun].getID () + int (30 - 30*guns [currentGun].rechargePercentage ()), 270*(1 - 2*int (way)), int (60*guns [currentGun].rechargePercentage ())));
+					gunCharge.setTextureRect (sf::IntRect (270*(way) + 270, 60*guns [currentGun].getID () + int (30 - 30*guns [currentGun].rechargePercentage ()), 270*(1 - 2*int (way)), int (60*guns [currentGun].rechargePercentage ())));
 					break;
 				case Action::Walk:
 					hands.setTextureRect (sf::IntRect (270*(way), 60*guns [currentGun].getID (), 270*(1 - 2*int (way)), 60));
@@ -123,7 +143,7 @@ class Stickman: public Object
 			{ return guns [currentGun]; }
 		sf::Vector2f getBulletStart ()
 			{
-			return position + sf::Vector2f (-10.f + 20.f*way, -160.f);
+			return position + sf::Vector2f (0, -160.f);
 			}
 	};
 
@@ -132,8 +152,10 @@ class Player: public Stickman
 	private:
 		bool lastTriggerState = false;
 
-		void Control (sf::Vector2f target, float time)
+		void Control (Level &lvl, sf::Vector2f target, float time)
 			{
+			CheckBorders (lvl, time);
+
 			// Toolbar switch
 			if (sf::Keyboard::isKeyPressed (sf::Keyboard::Num1))
 				{
@@ -238,10 +260,126 @@ class NPC: public Stickman
 	{
 	private:
 		int fraction = 0;
-		
-		void Control (sf::Vector2f target, float time)
+		int fightAction = npcAction::Stay;
+
+		void walk (float speed, float time)
 			{
+			if (way == 0)
+				{
+				if (velocity.x < speed - 7.5f*time)
+					velocity.x += 7.5f*time;
+				handAngle = -Pi/2.f;
+				}
+			else
+				{
+				if (velocity.x > -speed + 7.5f*time)
+					velocity.x -= 7.5f*time;
+				handAngle = Pi/2.f;
+				}
+			}
+
+		void updateNpcAction ()
+			{
+
 			
+			}
+
+		void Control (Level &lvl, sf::Vector2f target, float time)
+			{
+			sf::Vector2f trgDiff = target - getBulletStart();
+			float trgAngle = atan2 (-trgDiff.x, trgDiff.y);
+			float dist = vecL (trgDiff);
+			// Logic
+			size.x = (guns [currentGun].getLength ()-30)*2;
+
+			switch (type)
+				{
+				case objectType::citizen:
+					{
+					if (fightAction == npcAction::Walk)
+						{
+						if (CheckBorders (lvl, time) > 1)
+							{
+							if (way == 1) way = 0;
+							else          way = 1;
+							}
+						walk (2.5f, time);
+
+						if (hp != 100)
+							fightAction = npcAction::Run;
+						}
+					else if (fightAction == npcAction::Run)
+						{
+						if (CheckBorders (lvl, time) > 1)
+							way = !way;
+
+						walk (10.f, time);
+						}
+
+					break;
+					}
+				case objectType::solder:
+					{
+					CheckBorders (lvl, time);
+
+					float angleBeforeUpdate = handAngle;
+					
+					// Choosing the way
+					if (handAngle > 0) way = 1;
+					else               way = 0;
+
+					if (trgDiff.x > 0)
+						way = 0;
+					else
+						way = 1;
+					walk (5.f, time);
+
+					shooting = false;
+					if (dist < 1000)
+						{
+						handAngle = angleBeforeUpdate;
+
+						// Aiming
+						if (trgAngle > handAngle+2.f*Pi*time)
+							handAngle += 2.f*Pi*time;
+						if (trgAngle < handAngle-2.f*Pi*time)
+							handAngle -= 2.f*Pi*time;
+						else if (guns [currentGun].isReady ())
+							{
+							guns [currentGun].fire ();
+							shooting = true;
+							}
+						
+						}
+
+					guns [currentGun].update (time);
+
+					
+					break;
+					}
+
+				default:
+					CheckBorders (lvl, time);
+					break;
+				}
+			
+			// Actions
+			if (onGround)
+				{
+				if (fabs (velocity.x) > 11)
+					action = Action::Sprint;
+				else if (fabs (velocity.x) > 5)
+					action = Action::Run;
+				else if (fabs (velocity.x) <= 5)
+					action = Action::Walk;
+				else
+					action = Action::Stay;
+				}
+			else
+				{
+				if (velocity.y < -2.5f) { action = Action::Jump; }
+				else { action = Action::Fly; }
+				}
 			}
 	public:
 		NPC (sf::Image &image, sf::Image &gunImage, sf::Vector2f POS, float M, int npcId, int FRACTION, bool WAY):Stickman (image, gunImage, POS, M)
@@ -249,15 +387,39 @@ class NPC: public Stickman
 			type = npcId;
 			way = WAY;
 			fraction = FRACTION;
+
+			switch (npcId)
+				{
+				case objectType::citizen:
+					{
+					fightAction = npcAction::Walk;
+					
+					guns [0] = hands;
+					guns [1] = hands;
+					guns [2] = hands;
+					app.clothes = 2;
+					break;
+					}
+				case objectType::solder:
+					{
+					velocity = sf::Vector2f (0, 0);
+					handAngle = Pi*WAY-Pi/2.f;
+
+					guns [0] = PSR400;
+					guns [1] = hands;
+					guns [2] = hands;
+					app.clothes = 1;
+					}
+				default:
+					break;
+				}
+
 			}
 	};
 
 class ChristmasTree: public Object
 	{
 	public:
-		void Control (sf::Vector2f target, float time)
-			{}
-
 		void Draw (sf::RenderWindow &window, float time)
 			{
 			sf::Sprite sp;
@@ -265,10 +427,9 @@ class ChristmasTree: public Object
 			sp.setPosition (position);
 			sp.setOrigin (94, 311);
 			window.draw (sp);
-			//Draw::SimpleTxtr (window, texture, sf::IntRect (0, 0, 188, 311), position);
 			}
 
-		void CheckBorders (Level &level, float time)
+		int CheckBorders (Level &level, float time)
 			{
 			// floor
 			if (level.PhysicalMap [int (position.y/100)] [int ((position.x - 30)/100)] == 1 || level.PhysicalMap [int (position.y/100)] [int ((position.x + 30)/100)] == 1)
@@ -294,14 +455,24 @@ class ChristmasTree: public Object
 					{
 					velocity.x *= -0.3f;
 					position.x = int ((position.x + size.x/2)/100)*100 - size.x/2;
+					return 2;
 					}
 				if (level.PhysicalMap [int (position.y)/100 - i - 1] [int ((position.x - size.x/2)/100)] == 1)
 					{
 					velocity.x *= -0.3f;
 					position.x = int ((position.x - size.x/2)/100)*100 + 100 + size.x/2;
+					return 3;
 					}
 				}
+
+			return 1;
 			}
+
+		void Control (Level &lvl, sf::Vector2f target, float time)
+			{
+			CheckBorders (lvl, time);
+			}
+
 
 		ChristmasTree (sf::Image &image, sf::Vector2f POS, float M): Object (image, POS, M)
 			{

@@ -43,15 +43,14 @@ class Object
 			texture.loadFromImage (image);
 			}
 
-		virtual void Control (sf::Vector2f target, float time) = 0;
+		virtual void Control (Level &lvl, sf::Vector2f target, float time) = 0;
 
-		virtual void CheckBorders (Level &level, float time) = 0;
+		virtual int CheckBorders (Level &level, float time) = 0;
 
-		void Update (Level level, float time, sf::Vector2f target = sf::Vector2f (0, 0), bool TRG = false)
+		void Update (Level &level, float time, sf::Vector2f target = sf::Vector2f (0, 0), bool TRG = false)
 			{
-			CheckBorders (level, time);
+			Control (level, target, time);
 
-			Control (target, time);
 			if (!onGround) velocity.y += 9.8f*time;
 			trigger = TRG;
 			position += velocity*75.0f*time;
@@ -61,8 +60,10 @@ class Object
 
 		sf::Vector2f getPos () { return position; }
 		sf::Vector2f getVel () { return velocity; }
+		sf::Vector2f getSize () { return size; }
 		float        getMass () { return mass; }
 		int          getType () { return type; }
-		bool         alive () { return hp > 0;  }
+		bool         alive ()   { return hp > 0;  }
+		void damage (float dmg) { hp -= dmg; }
 
 	};

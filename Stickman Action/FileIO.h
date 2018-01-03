@@ -47,7 +47,7 @@ void loadFromFile (const char filename [], char* &buffer, size_t &bufSize, bool 
 	_close (fh);
 	}
 
-void saveToFile (char filename [], char* buffer, size_t bufSize, bool output = false)
+void saveToFile (const char filename [], char* buffer, size_t bufSize, bool output = false)
 	{
 	// Opening file
 	int fh;
