@@ -143,7 +143,7 @@ class Stickman: public Object
 			{ return guns [currentGun]; }
 		sf::Vector2f getBulletStart ()
 			{
-			return position + sf::Vector2f (-10.f + 20.f*way, -160.f);
+			return position + sf::Vector2f (0, -160.f);
 			}
 	};
 

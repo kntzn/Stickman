@@ -60,8 +60,10 @@ class Object
 
 		sf::Vector2f getPos () { return position; }
 		sf::Vector2f getVel () { return velocity; }
+		sf::Vector2f getSize () { return size; }
 		float        getMass () { return mass; }
 		int          getType () { return type; }
-		bool         alive () { return hp > 0;  }
+		bool         alive ()   { return hp > 0;  }
+		void damage (float dmg) { hp -= dmg; }
 
 	};

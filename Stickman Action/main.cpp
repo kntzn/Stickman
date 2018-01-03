@@ -68,9 +68,9 @@ void SinglePlayer (sf::RenderWindow &window)
 	int nBullets = 0;
 	std::vector <Object*> mapObjects;
 
-	stickmans.push_back (new Player (stickman, guns, sf::Vector2f (500, 300), 80));
-	stickmans.push_back (new NPC (stickman, guns, sf::Vector2f (1200, 300), 80, objectType::solder, 0, 0));
-	mapObjects.push_back (new ChristmasTree (tree, sf::Vector2f (600, 300), 20));
+	stickmans.push_back (new Player (stickman, guns, sf::Vector2f (500, 800), 80));
+	stickmans.push_back (new NPC (stickman, guns, sf::Vector2f (800, 800), 80, objectType::solder, 0, 0));
+	mapObjects.push_back (new ChristmasTree (tree, sf::Vector2f (900, 800), 20));
 
 	Camera camera (sf::FloatRect (0, 0, float (window.getSize().x), float (window.getSize().y)));
 	
@@ -79,6 +79,7 @@ void SinglePlayer (sf::RenderWindow &window)
 	sf::Clock delayTimer;
 	unsigned long int tickTimer = 0;
 	float avgDelay = 0;
+	sf::Vector2f thisPlayerPos;
 
 	bool lMousePrsd = false, rMousePrsd = false;
 	bool windowFocus = true;
@@ -145,7 +146,6 @@ void SinglePlayer (sf::RenderWindow &window)
 			screenshot.saveToFile (filename.c_str ());
 			}
 
-		sf::Vector2f thisPlayerPos;
 
 		// Physics
 		physics = clock ();
@@ -166,7 +166,20 @@ void SinglePlayer (sf::RenderWindow &window)
 					a->Update (level, time, thisPlayerPos);
 
 				if (a->isShoot ())
-					CreateBulletsFromGun (bullets+nBullets, nBullets, a->getBulletStart (), a->getHandAngle (), a->getDisp (), a->getGun (), a->getVel ());
+					CreateBulletsFromGun (bullets+nBullets, nBullets, a->getBulletStart (), a->getHandAngle (), a->getDisp (), a->getGun (), a->getVel (), a->getType());
+
+				// Stickmans <--> Bullets
+				for (int i = 0; i < nBullets; i++)
+					if ((bullets [i].getOwnerType () == objectType::player && a->getType () >= objectType::citizen) || 
+						(bullets [i].getOwnerType () >= objectType::turret && a->getType () <= objectType::citizen))
+						if (bullets [i].getPos ().x < a->getPos ().x + a->getSize ().x/2.f &&
+							bullets [i].getPos ().x > a->getPos ().x - a->getSize ().x/2.f &&
+							bullets [i].getPos ().y < a->getPos ().y &&
+							bullets [i].getPos ().y > a->getPos ().y - a->getSize ().y)
+							{
+							a->damage (10.f);
+							bullets [i].damage (10.f);
+							}
 
 				if (!a->alive ())
 					{
