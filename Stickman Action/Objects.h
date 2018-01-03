@@ -10,6 +10,7 @@ namespace npcAction
 		{
 		Stay,
 		Walk,
+		Run,
 		Back,
 		Shoot,
 		Rush
@@ -259,36 +260,109 @@ class NPC: public Stickman
 	{
 	private:
 		int fraction = 0;
-		
+		int fightAction = npcAction::Stay;
+
+		void walk (float speed, float time)
+			{
+			if (way == 0)
+				{
+				if (velocity.x < speed - 7.5f*time)
+					velocity.x += 7.5f*time;
+				handAngle = -Pi/2.f;
+				}
+			else
+				{
+				if (velocity.x > -speed + 7.5f*time)
+					velocity.x -= 7.5f*time;
+				handAngle = Pi/2.f;
+				}
+			}
+
+		void updateNpcAction ()
+			{
+
+			
+			}
+
 		void Control (Level &lvl, sf::Vector2f target, float time)
 			{
 			sf::Vector2f trgDiff = target - getBulletStart();
+			float trgAngle = atan2 (-trgDiff.x, trgDiff.y);
+			float dist = vecL (trgDiff);
 			// Logic
+			size.x = (guns [currentGun].getLength ()-30)*2;
+
 			switch (type)
 				{
 				case objectType::citizen:
 					{
-					if (CheckBorders (lvl, time) > 1)
+					if (fightAction == npcAction::Walk)
 						{
-						if (way == 1)
+						if (CheckBorders (lvl, time) > 1)
 							{
-							way = 0;
-							velocity.x = 2.5f;
-							handAngle = -Pi/2.f;
+							if (way == 1) way = 0;
+							else          way = 1;
 							}
-						else
-							{
-							way = 1;
-							velocity.x = -2.5f;
-							handAngle = Pi/2.f;
-							}
+						walk (2.5f, time);
+
+						if (hp != 100)
+							fightAction = npcAction::Run;
 						}
+					else if (fightAction == npcAction::Run)
+						{
+						if (CheckBorders (lvl, time) > 1)
+							way = !way;
+
+						walk (10.f, time);
+						}
+
 					break;
 					}
+				case objectType::solder:
+					{
+					CheckBorders (lvl, time);
+
+					float angleBeforeUpdate = handAngle;
+					
+					// Choosing the way
+					if (handAngle > 0) way = 1;
+					else               way = 0;
+
+					if (trgDiff.x > 0)
+						way = 0;
+					else
+						way = 1;
+					walk (5.f, time);
+
+					shooting = false;
+					if (dist < 1000)
+						{
+						handAngle = angleBeforeUpdate;
+
+						// Aiming
+						if (trgAngle > handAngle+2.f*Pi*time)
+							handAngle += 2.f*Pi*time;
+						if (trgAngle < handAngle-2.f*Pi*time)
+							handAngle -= 2.f*Pi*time;
+						else if (guns [currentGun].isReady ())
+							{
+							guns [currentGun].fire ();
+							shooting = true;
+							}
+						
+						}
+
+					guns [currentGun].update (time);
+
+					
+					break;
+					}
+
 				default:
+					CheckBorders (lvl, time);
 					break;
 				}
-
+			
 			// Actions
 			if (onGround)
 				{
@@ -310,16 +384,36 @@ class NPC: public Stickman
 	public:
 		NPC (sf::Image &image, sf::Image &gunImage, sf::Vector2f POS, float M, int npcId, int FRACTION, bool WAY):Stickman (image, gunImage, POS, M)
 			{
-			if (npcId == objectType::citizen)
-				{
-				velocity.x = 2.5f - 5.f*WAY;
-				handAngle = Pi*WAY-Pi/2.f;
-				}
-
-
 			type = npcId;
 			way = WAY;
 			fraction = FRACTION;
+
+			switch (npcId)
+				{
+				case objectType::citizen:
+					{
+					fightAction = npcAction::Walk;
+					
+					guns [0] = hands;
+					guns [1] = hands;
+					guns [2] = hands;
+					app.clothes = 2;
+					break;
+					}
+				case objectType::solder:
+					{
+					velocity = sf::Vector2f (0, 0);
+					handAngle = Pi*WAY-Pi/2.f;
+
+					guns [0] = PSR400;
+					guns [1] = hands;
+					guns [2] = hands;
+					app.clothes = 1;
+					}
+				default:
+					break;
+				}
+
 			}
 	};
 
