@@ -69,7 +69,7 @@ void SinglePlayer (sf::RenderWindow &window)
 	std::vector <Object*> mapObjects;
 
 	stickmans.push_back (new Player (stickman, guns, sf::Vector2f (500, 800), 80));
-	stickmans.push_back (new NPC (stickman, guns, sf::Vector2f (800, 800), 80, objectType::solder, 0, 0));
+	stickmans.push_back (new NPC (stickman, guns, sf::Vector2f (800, 800), 80, objectType::solder, 0, 1, 0));
 	mapObjects.push_back (new ChristmasTree (tree, sf::Vector2f (900, 800), 20));
 
 	Camera camera (sf::FloatRect (0, 0, float (window.getSize().x), float (window.getSize().y)));
@@ -177,8 +177,8 @@ void SinglePlayer (sf::RenderWindow &window)
 							bullets [i].getPos ().y < a->getPos ().y &&
 							bullets [i].getPos ().y > a->getPos ().y - a->getSize ().y)
 							{
-							a->damage (10.f);
-							bullets [i].damage (10.f);
+							a->damage (bullets [i].getDmg());
+							bullets [i].decreaseDmg (bullets [i].getDmg ());
 							}
 
 				if (!a->alive ())
@@ -201,8 +201,6 @@ void SinglePlayer (sf::RenderWindow &window)
 					nBullets--;
 					}
 				}
-
-			
 
 			for (auto a: mapObjects)
 				a->Update (level, time);
