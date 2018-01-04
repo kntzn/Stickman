@@ -23,7 +23,7 @@ class Object
 		bool onGround = false, trigger = false;
 
 		sf::Vector2f size;
-		float mass = 1, hp = 100.f;
+		float mass = 1, hp = 100.f, maxHp = hp;
 		sf::Texture texture;
 		int type;
 
@@ -58,12 +58,13 @@ class Object
 
 		virtual void Draw (sf::RenderWindow &window, float time) = 0;
 
-		sf::Vector2f getPos () { return position; }
-		sf::Vector2f getVel () { return velocity; }
+		sf::Vector2f getPos  () { return position; }
+		sf::Vector2f getVel  () { return velocity; }
 		sf::Vector2f getSize () { return size; }
 		float        getMass () { return mass; }
 		int          getType () { return type; }
-		bool         alive ()   { return hp > 0;  }
-		void damage (float dmg) { hp -= dmg; }
+		bool         alive   () { return hp > 0; }
+		float        getHp ()   { return hp; }
 
+		void damage (float dmg) { hp -= dmg; }
 	};

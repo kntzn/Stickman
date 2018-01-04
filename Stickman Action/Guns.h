@@ -41,19 +41,20 @@ class Bullet: public Object
 	{
 	private:
 		sf::IntRect txtr;
-		float distance = 0, maxDist = 0;
+		float distance = 0, maxDist = 0, dmg = 0;
 		int typeOfOwner = 0;
 	public:
 		Bullet ()
 			{
 			}
 
-		Bullet (sf::Image &img, sf::Vector2f POS, sf::Vector2f VEL, float ANG, sf::IntRect TXTR, float maxD, float M): Object (img, POS, M)
+		Bullet (sf::Image &img, sf::Vector2f POS, sf::Vector2f VEL, float ANG, sf::IntRect TXTR, float maxD, float DMG, float M): Object (img, POS, M)
 			{
 			angle = ANG;
 			velocity = VEL;
 			txtr = TXTR;
 			maxDist = maxD;
+			dmg = DMG;
 			}
 
 		int CheckBorders (Level &level, float time)
@@ -105,6 +106,8 @@ class Bullet: public Object
 			}
 
 		int getOwnerType () { return typeOfOwner; }
+		float getDmg ()     { return dmg*(1-distance/maxDist); }
+		void decreaseDmg (float value) { dmg -= value; }
 	};
 
 class Gun
@@ -171,7 +174,7 @@ class Gun
 
 			chargeAnimation = chrgAnim;
 
-			bullet = Bullet (img, sf::Vector2f (0, 0), sf::Vector2f (0, 0), 0, BULLETRECT, range, 1.0f);
+			bullet = Bullet (img, sf::Vector2f (0, 0), sf::Vector2f (0, 0), 0, BULLETRECT, range, damage, 1.0f);
 			}
 
 		void update (float time)

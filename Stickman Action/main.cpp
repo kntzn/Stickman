@@ -177,8 +177,8 @@ void SinglePlayer (sf::RenderWindow &window)
 							bullets [i].getPos ().y < a->getPos ().y &&
 							bullets [i].getPos ().y > a->getPos ().y - a->getSize ().y)
 							{
-							a->damage (10.f);
-							bullets [i].damage (10.f);
+							a->damage (bullets [i].getDmg());
+							bullets [i].decreaseDmg (bullets [i].getDmg ());
 							}
 
 				if (!a->alive ())
@@ -201,8 +201,6 @@ void SinglePlayer (sf::RenderWindow &window)
 					nBullets--;
 					}
 				}
-
-			
 
 			for (auto a: mapObjects)
 				a->Update (level, time);
