@@ -16,10 +16,9 @@ namespace npcAction
 		Rush
 		};
 	}
-
 float getNpcRange (unsigned int level)
 	{
-	return 2000*pow (level, 1.1f);
+	return float (pow (level, 1.1f))*2000.f;
 	}
 
 class Stickman: public Object
@@ -65,14 +64,15 @@ class Stickman: public Object
 					onGround = false;
 
 				// ceilling
-				if (level.PhysicalMap [int ((position.y - size.y-50)/100)] [int (position.x/100)] == 1)
+				if (level.PhysicalMap [int ((position.y - size.y)/100)] [int (position.x/100)] == 1)
 					{
-					position.y = int ((position.y)/100)*100.f + int ((size.y+50)/100)*100;
+					position.y = int ((position.y-size.y)/100)*100.f + int ((size.y)/100+2)*100;
 					velocity *= -0.8f;
+					return 1;
 					}
 
 				// side borders
-				for (int i = 0; i < int (size.y + 99)/100; i++)
+				for (int i = 0; i < int (size.y + 99)/100-1; i++)
 					{
 					if (level.PhysicalMap [int (position.y)/100 - i - 1] [int ((position.x + size.x/2)/100)] == 1)
 						{
@@ -88,6 +88,9 @@ class Stickman: public Object
 						}
 					}
 				}
+			else
+				onGround = false;
+
 			return 1;
 			}
 
@@ -164,36 +167,46 @@ class Player: public Stickman
 
 		void Control (Level &lvl, sf::Vector2f target, float time)
 			{
-			// Walls interactions controls
+			// Walls interactions controls (jumping & sliding)
 			int checkBordersResult = CheckBorders (lvl, time);
-		
-		
-			if (checkBordersResult == 2)
+			if (currentGun == gunSlot::Melee)
 				{
-				if (way == 0)
+				if (checkBordersResult == 2)
 					{
-					if (sf::Keyboard::isKeyPressed (sf::Keyboard::Space))
+					if (way == 0)
 						{
-						velocity.y = -7.5f;
-						velocity.x = -7.5f;
+						if (sf::Keyboard::isKeyPressed (sf::Keyboard::Space))
+							{
+							velocity.y = -7.5f;
+							velocity.x = -7.5f;
+							}
+						else if (sf::Keyboard::isKeyPressed (sf::Keyboard::W))
+							{
+							velocity.x = 0.1f;
+							if (velocity.y > 9.8f/8)
+								velocity.y += (9.8f/8 - velocity.y)*time;
+							}
 						}
 					}
-				
-				}
-			if (checkBordersResult == 3)
-				{
-				
-				if (way == 1)
+				if (checkBordersResult == 3)
 					{
-					if (sf::Keyboard::isKeyPressed (sf::Keyboard::Space))
+					if (way == 1)
 						{
-						velocity.y = -7.5f;
-						velocity.x = 7.5f;
+						if (sf::Keyboard::isKeyPressed (sf::Keyboard::Space))
+							{
+							velocity.y = -7.5f;
+							velocity.x = 7.5f;
+							}
+						else if (sf::Keyboard::isKeyPressed (sf::Keyboard::W))
+							{
+							velocity.x = -0.1f;
+							if (velocity.y > 9.8f/8)
+								velocity.y += (9.8f/8 - velocity.y)*time;
+							}
 						}
 					}
-				
 				}
-		
+
 			// Toolbar switch
 			if (sf::Keyboard::isKeyPressed (sf::Keyboard::Num1))
 				{
@@ -257,15 +270,17 @@ class Player: public Stickman
 			// Run & Walk controls
 			if (fabs (velocity.x) < 0.05f) velocity.x = 0;
 			bool sprint = sf::Keyboard::isKeyPressed (sf::Keyboard::LShift);
-			if (sf::Keyboard::isKeyPressed (sf::Keyboard::D) && onGround && velocity.x <  15) velocity.x += (15.f - velocity.x)*time;
-			if (sf::Keyboard::isKeyPressed (sf::Keyboard::A) && onGround && velocity.x > -15) velocity.x -= (velocity.x + 15.f)*time;
+			if (sf::Keyboard::isKeyPressed (sf::Keyboard::D) && onGround && velocity.x <  15) velocity.x += (15.f)*time;
+			if (sf::Keyboard::isKeyPressed (sf::Keyboard::A) && onGround && velocity.x > -15) velocity.x -= (15.f)*time;
 			if (onGround)
 				{
 				if (sf::Keyboard::isKeyPressed (sf::Keyboard::Space)) velocity.y = -5;
 				if (!sf::Keyboard::isKeyPressed (sf::Keyboard::A) && !sf::Keyboard::isKeyPressed (sf::Keyboard::D))
 					{
 					action = Action::Stay;
-					if (fabs (velocity.x) > 0) velocity.x /= 1.1f*time*60;
+					if      (velocity.x >  30.f*time) velocity.x -= 30.f*time;
+					else if (velocity.x < -30.f*time) velocity.x += 30.f*time;
+					else                              velocity.x = 0;
 					}
 				else if (fabs (velocity.x) > 11)
 					action = Action::Sprint;		
@@ -294,7 +309,6 @@ class Player: public Stickman
 			fraction = 0;
 			}
 	};
-
 class NPC: public Stickman
 	{
 	private:
@@ -322,9 +336,9 @@ class NPC: public Stickman
 			sf::Vector2f trgDiff = target - getBulletStart();
 			float trgAngle = atan2 (-trgDiff.x, trgDiff.y);
 			float dist = vecL (trgDiff);
+
 			// Logic
 			size.x = (guns [currentGun].getLength ()-30)*2;
-
 			int checkResult = CheckBorders (lvl, time);
 
 			switch (type)
@@ -355,7 +369,7 @@ class NPC: public Stickman
 					}
 				case objectType::solder:
 					{
-					if (hp != maxHp)
+					if (hp != maxHp || trigger)
 						{
 						if (hp < maxHp/4.f)
 							fightAction = npcAction::Back;
@@ -374,93 +388,101 @@ class NPC: public Stickman
 							}
 						walk (2.5f, time);
 						}
-					else if (fightAction == npcAction::Rush)
+					else
 						{
-						float angleBeforeUpdate = handAngle;
-
-						// Choosing the way
-						if (handAngle > 0) way = 1;
-						else               way = 0;
-
-						if (trgDiff.x > 0)
-							way = 0;
+						if (dist < 300)
+							currentGun = gunSlot::Melee;
 						else
-							way = 1;
-						walk (10.f, time);
+							currentGun = gunSlot::Primary;
 
-						shooting = false;
-						if (dist < getNpcRange (npcLevel))
+						if (fightAction == npcAction::Rush)
 							{
+							float angleBeforeUpdate = handAngle;
+
+							// Choosing the way
+							if (handAngle > 0) way = 1;
+							else               way = 0;
+
+							if (trgDiff.x > 0)
+								way = 0;
+							else
+								way = 1;
+							walk (10.f, time);
+
+							shooting = false;
+							if (dist < getNpcRange (npcLevel))
+								{
+								handAngle = angleBeforeUpdate;
+
+								// Aiming & shooting
+								if (trgAngle > handAngle+2.f*Pi*time)
+									handAngle += 2.f*Pi*time;
+								if (trgAngle < handAngle-2.f*Pi*time)
+									handAngle -= 2.f*Pi*time;
+								else if (guns [currentGun].isReady ())
+									{
+									guns [currentGun].fire ();
+									//shooting = true;
+									}
+								}
+							}
+						else if (fightAction == npcAction::Shoot)
+							{
+							// Choosing the way
+							if (handAngle > 0) way = 1;
+							else               way = 0;
+
+							// Stopping 
+							if (velocity.x >  7.5f*time) velocity.x -= 7.5f*time;
+							else if (velocity.x < -7.5f*time) velocity.x += 7.5f*time;
+							else velocity.x = 0;
+
+							shooting = false;
+							if (dist < getNpcRange (npcLevel))
+								{
+								// Aiming & shooting
+								if (trgAngle > handAngle+2.f*Pi*time)
+									handAngle += 2.f*Pi*time;
+								if (trgAngle < handAngle-2.f*Pi*time)
+									handAngle -= 2.f*Pi*time;
+								else if (guns [currentGun].isReady ())
+									{
+									guns [currentGun].fire ();
+									shooting = true;
+									}
+								}
+
+							}
+						else if (fightAction == npcAction::Back)
+							{
+							float angleBeforeUpdate = handAngle;
+
+							// Walking
+							if (trgDiff.x > 0)
+								way = 1;
+							else
+								way = 0;
+							walk (10.f, time);
+
 							handAngle = angleBeforeUpdate;
+							way = !way;
 
 							// Aiming & shooting
-							if (trgAngle > handAngle+2.f*Pi*time)
-								handAngle += 2.f*Pi*time;
-							if (trgAngle < handAngle-2.f*Pi*time)
-								handAngle -= 2.f*Pi*time;
-							else if (guns [currentGun].isReady ())
+							shooting = false;
+							if (dist < getNpcRange (npcLevel))
 								{
-								guns [currentGun].fire ();
-								//shooting = true;
+								if (trgAngle > handAngle+2.f*Pi*time)
+									handAngle += 2.f*Pi*time;
+								if (trgAngle < handAngle-2.f*Pi*time)
+									handAngle -= 2.f*Pi*time;
+								else if (guns [currentGun].isReady ())
+									{
+									guns [currentGun].fire ();
+									shooting = true;
+									}
 								}
+
 							}
-						}
-					else if (fightAction == npcAction::Shoot)
-						{
-						// Choosing the way
-						if (handAngle > 0) way = 1;
-						else               way = 0;
-
-						// Stopping 
-						if      (velocity.x >  7.5f*time) velocity.x -= 7.5f*time;
-						else if (velocity.x < -7.5f*time) velocity.x += 7.5f*time;
-						else velocity.x = 0;
-
-						shooting = false;
-						if (dist < getNpcRange (npcLevel))
-							{
-							// Aiming & shooting
-							if (trgAngle > handAngle+2.f*Pi*time)
-								handAngle += 2.f*Pi*time;
-							if (trgAngle < handAngle-2.f*Pi*time)
-								handAngle -= 2.f*Pi*time;
-							else if (guns [currentGun].isReady ())
-								{
-								guns [currentGun].fire ();
-								//shooting = true;
-								}
-							}
-
-						}
-					else if (fightAction == npcAction::Back)
-						{
-						float angleBeforeUpdate = handAngle;
-
-						// Walking
-						if (trgDiff.x > 0)
-							way = 1;
-						else
-							way = 0;
-						walk (10.f, time);
-
-						handAngle = angleBeforeUpdate;
-						way = !way;
-
-						// Aiming & shooting
-						shooting = false;
-						if (dist < getNpcRange (npcLevel))
-							{
-							if (trgAngle > handAngle+2.f*Pi*time)
-								handAngle += 2.f*Pi*time;
-							if (trgAngle < handAngle-2.f*Pi*time)
-								handAngle -= 2.f*Pi*time;
-							else if (guns [currentGun].isReady ())
-								{
-								guns [currentGun].fire ();
-								//shooting = true;
-								}
-							}
-
 						}
 
 					guns [currentGun].update (time);

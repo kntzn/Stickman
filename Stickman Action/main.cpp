@@ -28,7 +28,8 @@ void setup ()
 void loop  (WindowParameters wp)
 	{
 	sf::RenderWindow window (sf::VideoMode (wp.vm.width, wp.vm.height), "", wp.Mode, wp.cs);
-	window.setFramerateLimit (wp.fpsLim);
+	//window.setFramerateLimit (wp.fpsLim);
+	window.setFramerateLimit (70);
 
 	short int mode = 1;
 	while (mode != 0)
@@ -92,6 +93,7 @@ void SinglePlayer (sf::RenderWindow &window)
 		//Time Block
 		float time = delayTimer.getElapsedTime ().asSeconds ();
 		delayTimer.restart ();
+		// Debug output
 		//std::cout << "FPS: " << 1.f/time << std::endl;
 		//std::cout << "Graphics: " << end - graphics << std::endl;
 		//std::cout << "Physics: " << graphics - physics << std::endl << std::endl;
@@ -146,7 +148,6 @@ void SinglePlayer (sf::RenderWindow &window)
 			screenshot.saveToFile (filename.c_str ());
 			}
 
-
 		// Physics
 		physics = clock ();
 		if (windowFocus)
@@ -155,6 +156,23 @@ void SinglePlayer (sf::RenderWindow &window)
 			for (auto i = stickmans.begin (); i != stickmans.end ();)
 				{
 				Stickman *a = *i;
+
+				// Stickmans <--> Bullets
+				for (int i = 0; i < nBullets; i++)
+					if ((bullets [i].getOwnerType () == objectType::player && a->getType () >= objectType::citizen) ||
+						(bullets [i].getOwnerType () >= objectType::turret && a->getType () <= objectType::citizen))
+						if (bullets [i].getPos ().x < a->getPos ().x + a->getSize ().x/2.f &&
+							bullets [i].getPos ().x > a->getPos ().x - a->getSize ().x/2.f &&
+							bullets [i].getPos ().y < a->getPos ().y &&
+							bullets [i].getPos ().y > a->getPos ().y - a->getSize ().y)
+							{
+							a->damage (bullets [i].getDmg (), 
+									   (bullets [i].getVel ()*bullets [i].getMass ()));
+
+							std::cout << (bullets [i].getVel ()*bullets [i].getMass ()).y << std::endl;
+
+							bullets [i].decreaseDmg (bullets [i].getDmg ());
+							}
 
 				if (a->getType () == objectType::player)
 					{
@@ -167,19 +185,6 @@ void SinglePlayer (sf::RenderWindow &window)
 
 				if (a->isShoot ())
 					CreateBulletsFromGun (bullets+nBullets, nBullets, a->getBulletStart (), a->getHandAngle (), a->getDisp (), a->getGun (), a->getVel (), a->getType());
-
-				// Stickmans <--> Bullets
-				for (int i = 0; i < nBullets; i++)
-					if ((bullets [i].getOwnerType () == objectType::player && a->getType () >= objectType::citizen) || 
-						(bullets [i].getOwnerType () >= objectType::turret && a->getType () <= objectType::citizen))
-						if (bullets [i].getPos ().x < a->getPos ().x + a->getSize ().x/2.f &&
-							bullets [i].getPos ().x > a->getPos ().x - a->getSize ().x/2.f &&
-							bullets [i].getPos ().y < a->getPos ().y &&
-							bullets [i].getPos ().y > a->getPos ().y - a->getSize ().y)
-							{
-							a->damage (bullets [i].getDmg());
-							bullets [i].decreaseDmg (bullets [i].getDmg ());
-							}
 
 				if (!a->alive ())
 					{
@@ -206,7 +211,6 @@ void SinglePlayer (sf::RenderWindow &window)
 				a->Update (level, time);
 			}
 
-		
 		// Snowflakes
 		for (int i = 0; i < 100; i++)
 			{
