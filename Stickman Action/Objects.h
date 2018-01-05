@@ -331,6 +331,39 @@ class NPC: public Stickman
 				}
 			}
 
+		bool checkVisibility (Level &lvl, sf::Vector2f eyes, sf::Vector2f trg)
+			{
+			float k = (trg.y - eyes.y)/(trg.x - eyes.x + 0.00000001f);
+			if (eyes.x < trg.x)
+				{
+				float y = (eyes.y)/100;
+				if (-1 <= k && k <= 1)
+					for (int i = int (eyes.x/100); i < int (trg.x)/100; i++)
+						{
+						y += k;
+						if (lvl.PhysicalMap [int (y)] [i] == 1)
+							return false;
+						}
+				else
+					return false;
+				}
+			else
+				{
+				float y = (trg.y)/100;
+				if (-1 <= k && k <= 1)
+					for (int i = int (trg.x/100); i < int (eyes.x)/100; i++)
+						{
+						y += k;
+						if (lvl.PhysicalMap [int (y)] [i] == 1)
+							return false;
+						}
+				else 
+					return false;
+				}
+
+			return true;
+			}
+
 		void Control (Level &lvl, sf::Vector2f target, float time)
 			{
 			sf::Vector2f trgDiff = target - getBulletStart();
@@ -369,7 +402,8 @@ class NPC: public Stickman
 					}
 				case objectType::solder:
 					{
-					if (hp != maxHp || trigger)
+					if (hp != maxHp || trigger ||
+						(checkVisibility (lvl, getBulletStart (), target) && ((way == 0 && trgDiff.x > 0) || (way == 1 && trgDiff.x < 0))))
 						{
 						if (hp < maxHp/4.f)
 							fightAction = npcAction::Back;

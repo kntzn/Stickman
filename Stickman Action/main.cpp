@@ -169,8 +169,6 @@ void SinglePlayer (sf::RenderWindow &window)
 							a->damage (bullets [i].getDmg (), 
 									   (bullets [i].getVel ()*bullets [i].getMass ()));
 
-							std::cout << (bullets [i].getVel ()*bullets [i].getMass ()).y << std::endl;
-
 							bullets [i].decreaseDmg (bullets [i].getDmg ());
 							}
 
