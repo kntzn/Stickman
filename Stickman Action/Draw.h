@@ -4,15 +4,18 @@
 #include "StickLib.h"
 
 //All types of actions
-enum Action
+namespace  Action
 	{
-	Stay,
-	Walk,
-	Run,
-	Sprint,
-	Fly,
-	Jump
-	};
+	enum
+		{
+		Stay,
+		Walk,
+		Run,
+		Sprint,
+		Fly,
+		Jump
+		};
+	}
 
 // Container for all appearance parameters & timers;
 class Appearance

@@ -23,7 +23,7 @@ class Object
 		bool onGround = false, trigger = false;
 
 		sf::Vector2f size;
-		float mass = 1, hp = 100.f;
+		float mass = 1, hp = 100.f, maxHp = hp;
 		sf::Texture texture;
 		int type;
 
@@ -43,26 +43,28 @@ class Object
 			texture.loadFromImage (image);
 			}
 
-		virtual void Control (sf::Vector2f target, float time) = 0;
+		virtual void Control (Level &lvl, sf::Vector2f target, float time) = 0;
 
-		virtual void CheckBorders (Level &level, float time) = 0;
+		virtual int CheckBorders (Level &level, float time) = 0;
 
-		void Update (Level level, float time, sf::Vector2f target = sf::Vector2f (0, 0), bool TRG = false)
+		void Update (Level &level, float time, sf::Vector2f target = sf::Vector2f (0, 0), bool TRG = false)
 			{
-			CheckBorders (level, time);
-
-			Control (target, time);
-			if (!onGround) velocity.y += 9.8f*time;
 			trigger = TRG;
 			position += velocity*75.0f*time;
+			Control (level, target, time);
+
+			if (!onGround) velocity.y += 9.8f*time;
 			}
 
 		virtual void Draw (sf::RenderWindow &window, float time) = 0;
 
-		sf::Vector2f getPos () { return position; }
-		sf::Vector2f getVel () { return velocity; }
+		sf::Vector2f getPos  () { return position; }
+		sf::Vector2f getVel  () { return velocity; }
+		sf::Vector2f getSize () { return size; }
 		float        getMass () { return mass; }
 		int          getType () { return type; }
-		bool         alive () { return hp > 0;  }
+		bool         alive   () { return hp > 0; }
+		float        getHp ()   { return hp; }
 
+		void damage (float dmg, sf::Vector2f kick = sf::Vector2f (0, 0)) { hp -= dmg; velocity += kick;  }
 	};
