@@ -28,7 +28,8 @@ void setup ()
 void loop  (WindowParameters wp)
 	{
 	sf::RenderWindow window (sf::VideoMode (wp.vm.width, wp.vm.height), "", wp.Mode, wp.cs);
-	window.setFramerateLimit (wp.fpsLim);
+	//window.setFramerateLimit (wp.fpsLim);
+	window.setFramerateLimit (70);
 
 	short int mode = 1;
 	while (mode != 0)
@@ -58,7 +59,6 @@ void SinglePlayer (sf::RenderWindow &window)
 	mapEditor (window, level, map_sprite, "Data/map/0.txt");
 
 	//---------Objects list---------//
-
 	float snow [100] = {};
 	float snowSpeed [100] = {};
 	for (int i = 0; i < 100; i++)
@@ -69,8 +69,9 @@ void SinglePlayer (sf::RenderWindow &window)
 	int nBullets = 0;
 	std::vector <Object*> mapObjects;
 
-	stickmans.push_back (new Player (stickman, guns, sf::Vector2f (500, 300), 80));
-	mapObjects.push_back (new ChristmasTree (tree, sf::Vector2f (600, 300), 20));
+	stickmans.push_back (new Player (stickman, guns, sf::Vector2f (500, 800), 80));
+	stickmans.push_back (new NPC (stickman, guns, sf::Vector2f (800, 800), 80, objectType::solder, 0, 1, 0));
+	mapObjects.push_back (new ChristmasTree (tree, sf::Vector2f (900, 800), 20));
 
 	Camera camera (sf::FloatRect (0, 0, float (window.getSize().x), float (window.getSize().y)));
 	
@@ -79,17 +80,23 @@ void SinglePlayer (sf::RenderWindow &window)
 	sf::Clock delayTimer;
 	unsigned long int tickTimer = 0;
 	float avgDelay = 0;
-
+	sf::Vector2f thisPlayerPos;
 
 	bool lMousePrsd = false, rMousePrsd = false;
 	bool windowFocus = true;
+
+	// speedtests variables
+	clock_t physics = 0, graphics = 0, end = 0;
 
 	while (window.isOpen ())
 		{
 		//Time Block
 		float time = delayTimer.getElapsedTime ().asSeconds ();
 		delayTimer.restart ();
-		//std::cout << "FPS" << 1.f/time << std::endl;
+		// Debug output
+		//std::cout << "FPS: " << 1.f/time << std::endl;
+		//std::cout << "Graphics: " << end - graphics << std::endl;
+		//std::cout << "Physics: " << graphics - physics << std::endl << std::endl;
 
 		if (tickTimer = 0) avgDelay = time;
 		
@@ -141,9 +148,8 @@ void SinglePlayer (sf::RenderWindow &window)
 			screenshot.saveToFile (filename.c_str ());
 			}
 
-		sf::Vector2f thisPlayerPos;
-
 		// Physics
+		physics = clock ();
 		if (windowFocus)
 			{
 			// Stickmans
@@ -151,17 +157,32 @@ void SinglePlayer (sf::RenderWindow &window)
 				{
 				Stickman *a = *i;
 
+				// Stickmans <--> Bullets
+				for (int i = 0; i < nBullets; i++)
+					if ((bullets [i].getOwnerType () == objectType::player && a->getType () >= objectType::citizen) ||
+						(bullets [i].getOwnerType () >= objectType::turret && a->getType () <= objectType::citizen))
+						if (bullets [i].getPos ().x < a->getPos ().x + a->getSize ().x/2.f &&
+							bullets [i].getPos ().x > a->getPos ().x - a->getSize ().x/2.f &&
+							bullets [i].getPos ().y < a->getPos ().y &&
+							bullets [i].getPos ().y > a->getPos ().y - a->getSize ().y)
+							{
+							a->damage (bullets [i].getDmg (), 
+									   (bullets [i].getVel ()*bullets [i].getMass ()));
+
+							bullets [i].decreaseDmg (bullets [i].getDmg ());
+							}
+
 				if (a->getType () == objectType::player)
 					{
-					thisPlayerPos = a->getPos ();
+					thisPlayerPos = a->getBulletStart ();
 
 					a->Update (level, time, sf::Vector2f (sf::Mouse::getPosition (window))*1920.f/float (window.getSize ().x), lMousePrsd);
 					}
 				else
-					a->Update (level, time, sf::Vector2f (sf::Mouse::getPosition (window))*1920.f/float (window.getSize ().x));
+					a->Update (level, time, thisPlayerPos);
 
 				if (a->isShoot ())
-					CreateBulletsFromGun (bullets+nBullets, nBullets, a->getBulletStart (), a->getHandAngle (), a->getDisp (), a->getGun (), a->getVel ());
+					CreateBulletsFromGun (bullets+nBullets, nBullets, a->getBulletStart (), a->getHandAngle (), a->getDisp (), a->getGun (), a->getVel (), a->getType());
 
 				if (!a->alive ())
 					{
@@ -196,7 +217,8 @@ void SinglePlayer (sf::RenderWindow &window)
 			if (snow [i] > camera.cam.getCenter ().y+window.getSize ().y/2) snow [i] -= window.getSize ().y;
 			if (snow [i] < camera.cam.getCenter ().y-window.getSize ().y/2) snow [i] += window.getSize ().y;
 			}
-
+		
+		graphics = clock ();
 		window.setView (camera.PlayerCam (sf::Vector2f (thisPlayerPos.x, thisPlayerPos.y-200)));
 		// Graphics
 		window.clear (sf::Color (32, 32, 32));
@@ -214,7 +236,8 @@ void SinglePlayer (sf::RenderWindow &window)
 			if (onScreen (bullets [i].getPos (), window, camera))
 				bullets [i].Draw (window, time);
 		
-		for (int i = int (camera.cam.getCenter ().x-920)/20; i < int (camera.cam.getCenter ().x+920)/20; i++)
+		
+		for (int i = int (camera.cam.getCenter ().x-window.getSize().x/2)/20; i < int (camera.cam.getCenter ().x+window.getSize ().x/2)/20; i++)
 			{
 			sf::CircleShape snowflake;
 			snowflake.setPosition (i*20.f, snow [(i+100)%100]);
@@ -222,6 +245,8 @@ void SinglePlayer (sf::RenderWindow &window)
 			snowflake.setFillColor (sf::Color::White);
 			window.draw (snowflake);
 			}
+			
+		end = clock ();
 
 		window.display ();	
 

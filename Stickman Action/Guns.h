@@ -41,34 +41,49 @@ class Bullet: public Object
 	{
 	private:
 		sf::IntRect txtr;
-		float distance = 0, maxDist = 0;
+		float distance = 0, maxDist = 0, dmg = 0;
+		int typeOfOwner = 0;
 	public:
 		Bullet ()
 			{
 			}
 
-		Bullet (sf::Image &img, sf::Vector2f POS, sf::Vector2f VEL, float ANG, sf::IntRect TXTR, float maxD, float M): Object (img, POS, M)
+		Bullet (sf::Image &img, sf::Vector2f POS, sf::Vector2f VEL, float ANG, sf::IntRect TXTR, float maxD, float DMG, float M): Object (img, POS, M)
 			{
 			angle = ANG;
 			velocity = VEL;
 			txtr = TXTR;
 			maxDist = maxD;
+			dmg = DMG;
 			}
 
-		void Control (sf::Vector2f target, float time)
+		int CheckBorders (Level &level, float time)
 			{
-			if (distance > maxDist)
-				hp = 0;
-				
-			distance += vecL (velocity)*time;
-			}
-
-		void CheckBorders (Level &level, float time)
-			{
-			if (level.PhysicalMap [int (position.y/100)] [int (position.x/100)])
+			if (0 <= position.x && 0 <= position.y && position.x < MAP_W*100.f && position.y < MAP_H*100.f)
+				{
+				if (level.PhysicalMap [int (position.y/100)] [int (position.x/100)])
+					{
+					hp = 0;
+					return true;
+					}
+				}
+			else
 				{
 				hp = 0;
+				return true;
 				}
+
+			return false;
+			}
+
+		void Control (Level &lvl, sf::Vector2f target, float time)
+			{
+			CheckBorders (lvl, time);
+
+			if (distance > maxDist)
+				hp = 0;
+
+			distance += vecL (velocity)*time;
 			}
 
 		void Draw (sf::RenderWindow &window, float time)
@@ -82,12 +97,17 @@ class Bullet: public Object
 			window.draw (cs);*/
 			}
 
-		void setInitParam (sf::Vector2f pos, sf::Vector2f vel, float ang)
+		void setInitParam (sf::Vector2f pos, sf::Vector2f vel, float ang, int owner)
 			{
 			position = pos;
 			velocity = vel;
 			angle = ang;
+			typeOfOwner = owner;
 			}
+
+		int getOwnerType () { return typeOfOwner; }
+		float getDmg ()     { return dmg*(1-distance/maxDist); }
+		void decreaseDmg (float value) { dmg -= value; }
 	};
 
 class Gun
@@ -154,7 +174,7 @@ class Gun
 
 			chargeAnimation = chrgAnim;
 
-			bullet = Bullet (img, sf::Vector2f (0, 0), sf::Vector2f (0, 0), 0, BULLETRECT, range, 1.0f);
+			bullet = Bullet (img, sf::Vector2f (0, 0), sf::Vector2f (0, 0), 0, BULLETRECT, range, damage, (gType == gunType::Knife)? mass : 0.03f);
 			}
 
 		void update (float time)
@@ -210,7 +230,7 @@ class Gun
 		// Returns percentage of charge
 		float rechargePercentage ()
 			{
-			return (reloadTime-reloadTimer)/reloadTime;
+			return (reloadTime-reloadTimer)/reloadTime -0.01f;
 			}
 		// Returns type of trigger
 		int getTriggerType ()
@@ -226,21 +246,21 @@ class Gun
 			bulletsLeftInMagazine--;
 			}
 
-		Bullet getBullet (sf::Vector2f position, float angle, float currentDisp, sf::Vector2f additionalVel = sf::Vector2f (0, 0))
+		Bullet getBullet (sf::Vector2f position, float angle, float currentDisp, sf::Vector2f additionalVel = sf::Vector2f (0, 0), int owner = 0)
 			{
 			float disp = rangeRand (-currentDisp-dispersion, currentDisp+dispersion);
 			bullet.setInitParam (position, 
 								 sf::Vector2f (bulletSpeed*sin (-angle-disp)*power, bulletSpeed*cos (-angle-disp)*power),
-								 -(angle+disp));
+								 -(angle+disp), owner);
 			return bullet;
 			}
 	};
 
-	void CreateBulletsFromGun (Bullet* empty, int &id, sf::Vector2f position, float angle, float currentDisp, Gun gun, sf::Vector2f additionalVel)
+void CreateBulletsFromGun (Bullet* empty, int &id, sf::Vector2f position, float angle, float currentDisp, Gun gun, sf::Vector2f additionalVel, int owner = 0)
 	{
 	for (int i = 0; i < gun.nBulletsPerShot(); i++)
 		{
-		*empty = gun.getBullet (position, angle, currentDisp, additionalVel);
+		*empty = gun.getBullet (position, angle, currentDisp, additionalVel, owner);
 		id++;
 		}	
 	}
@@ -252,7 +272,7 @@ Gun F12;
 
 void initGuns (sf::Image &img)
 	{
-	hands  = Gun (img, 0, gunType::Knife, triggerType::SemiAuto,   10, damageType::Kinetic, 60.f, 1, 1,  2.f,   0,       0,    120.f, 0.5f, 0,     sf::IntRect (280, 0, 25, 60),  false);
+	hands  = Gun (img, 0, gunType::Knife, triggerType::SemiAuto,  10,  damageType::Kinetic, 60.f, 1, 1,  0.5f,   0,       0.1f,    120.f, 0.5f, 0,     sf::IntRect (280, 0, 25, 60),  false);
 	PSR400 = Gun (img, 1, gunType::sRifle, triggerType::Hold,     200, damageType::Plasma,  80.f, 1, 1,  500.f, Pi/32.f, 10,   210.f, 3.f,  0,     sf::IntRect (540, 88, 36, 5),  true);
 	F12    = Gun (img, 2, gunType::Pistol, triggerType::SemiAuto, 35,  damageType::Kinetic, 60.f, 1, 12, 200.f, Pi/16.f, 1.5f, 142.f, 3.f,  0.25f, sf::IntRect (275, 155, 10, 6), false);
 	}
