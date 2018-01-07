@@ -28,7 +28,7 @@ void setup ()
 void loop  (WindowParameters wp)
 	{
 	sf::RenderWindow window (sf::VideoMode (wp.vm.width, wp.vm.height), "", wp.Mode, wp.cs);
-	//window.setFramerateLimit (wp.fpsLim);
+	window.setVerticalSyncEnabled (true);
 	window.setFramerateLimit (70);
 
 	short int mode = 1;
@@ -49,9 +49,9 @@ void SinglePlayer (sf::RenderWindow &window)
 	initGuns (guns);
 
 	// Trees
-	sf::Image door; 
-	door.loadFromFile ("Data/img/mapObjects.png");
-	door.createMaskFromColor (sf::Color (0, 0, 255));
+	sf::Image mapObjects_img;
+	mapObjects_img.loadFromFile ("Data/img/mapObjects.png");
+	mapObjects_img.createMaskFromColor (sf::Color (0, 0, 255));
 
 	// Map sprites
 	sf::Image map_img; map_img.loadFromFile ("Data/img/tileset.png");
@@ -65,16 +65,13 @@ void SinglePlayer (sf::RenderWindow &window)
 	sf::Sprite background;
 	background.setTexture (backgr);
 
-	//--------Creating level--------//
-	Level level (0, 0);
-	mapEditor (window, level, map_sprite, "Data/map/0.txt");
-
 	//---------Objects list---------//
+	/*//Rain
 	float snow [100] = {};
 	float snowSpeed [100] = {};
 	for (int i = 0; i < 100; i++)
-		snowSpeed [i] = (rand ()%100+50)*5.f;
-
+		snowSpeed [i] = (rand ()%100+50)*5.f;*/
+		
 	std::vector <Stickman*> stickmans;
 	Bullet bullets [1000];
 	int nBullets = 0;
@@ -82,7 +79,11 @@ void SinglePlayer (sf::RenderWindow &window)
 
 	stickmans.push_back (new Player (stickman, guns, sf::Vector2f (900, 800), 80));
 	stickmans.push_back (new NPC (stickman, guns, sf::Vector2f (1100, 800), 80, objectType::solder, 0, 1, 0));
-	mapObjects.push_back (new Door (door, sf::Vector2f (850, 500), 10));
+
+	//--------Creating level--------//
+	Level level (0, 0);
+	mapEditor (window, level, map_sprite, "Data/map/0.txt");
+	mapObjectsSetup (level, stickmans, mapObjects, stickman, mapObjects_img, guns);
 
 	Camera camera (sf::FloatRect (0, 0, float (window.getSize().x), float (window.getSize().y)));
 	
@@ -96,26 +97,28 @@ void SinglePlayer (sf::RenderWindow &window)
 	bool lMousePrsd = false, rMousePrsd = false;
 	bool windowFocus = true;
 
+	bool DEBUG_VIEW = false;
+
 	// speedtests variables
 	clock_t physics = 0, graphics = 0, end = 0;
 
 	while (window.isOpen ())
 		{
-		//Time Block
+		//--------Time--------//
+		// global delay timer
 		float time = delayTimer.getElapsedTime ().asSeconds ();
 		delayTimer.restart ();
+
+		// adapt average delay if current delay is not too big
+		if (tickTimer == 0) avgDelay = time;
+		if (time < avgDelay*10.0f)
+			avgDelay += (time - avgDelay)/100.0f;
 		// Debug output
 		//std::cout << "FPS: " << 1.f/time << std::endl;
 		//std::cout << "Graphics: " << end - graphics << std::endl;
 		//std::cout << "Physics: " << graphics - physics << std::endl << std::endl;
 
-		if (tickTimer = 0) avgDelay = time;
-		
-		// adapt average delay if current delay is not too big
-		if (time < avgDelay*10.0f)
-			avgDelay += (time - avgDelay)/100.0f;
-
-		//Events
+		//--------Events--------//
 		sf::Event windowEvent;
 		while (window.pollEvent (windowEvent))
 			{
@@ -144,22 +147,27 @@ void SinglePlayer (sf::RenderWindow &window)
 
 			}
 
-		if (sf::Keyboard::isKeyPressed (sf::Keyboard::F2))
+		if (windowFocus)
 			{
-			sf::Vector2u windowSize = window.getSize();
-			sf::Texture texture;
-			texture.create(windowSize.x, windowSize.y);
-			texture.update(window);
-			sf::Image screenshot = texture.copyToImage();
+			if (sf::Keyboard::isKeyPressed (sf::Keyboard::F2))
+				{
+				sf::Vector2u windowSize = window.getSize ();
+				sf::Texture texture;
+				texture.create (windowSize.x, windowSize.y);
+				texture.update (window);
+				sf::Image screenshot = texture.copyToImage ();
 
-			std::string filename;
-			filename += "Screenshots/"; 
-			filename += std::to_string (tickTimer);
-			filename += ".png";
-			screenshot.saveToFile (filename.c_str ());
+				std::string filename;
+				filename += "Screenshots/";
+				filename += std::to_string (tickTimer);
+				filename += ".png";
+				screenshot.saveToFile (filename.c_str ());
+				}
+			if (sf::Keyboard::isKeyPressed (sf::Keyboard::F3))
+				DEBUG_VIEW = !DEBUG_VIEW;	
 			}
-
-		// Physics
+		
+		//--------Physics--------//
 		physics = clock ();
 		if (windowFocus)
 			{
@@ -183,6 +191,7 @@ void SinglePlayer (sf::RenderWindow &window)
 							bullets [i].decreaseDmg (bullets [i].getDmg ());
 							}
 
+				// Updating objects
 				if (a->getType () == objectType::player)
 					{
 					thisPlayerPos = a->getBulletStart ();
@@ -192,20 +201,9 @@ void SinglePlayer (sf::RenderWindow &window)
 				else
 					a->Update (level, time, thisPlayerPos);
 
+				// Creating bullets
 				if (a->isShoot ())
 					CreateBulletsFromGun (bullets+nBullets, nBullets, a->getBulletStart (), a->getHandAngle (), a->getDisp (), a->getGun (), a->getVel (), a->getType());
-
-				// Stickmans <--> MapObjects
-				for (auto b: mapObjects)
-					{
-					sf::Vector2f closestPos = sf::Vector2f (INFINITY, INFINITY);
-
-					for (auto c: stickmans)
-						if (vecL (c->getBulletStart () - b->getPos ()) < vecL (closestPos))
-							closestPos = c->getBulletStart ();
-					
-					b->Update (level, time, closestPos);
-					}
 
 				if (!a->alive ())
 					{
@@ -214,6 +212,18 @@ void SinglePlayer (sf::RenderWindow &window)
 					}
 				else
 					i++;
+				}
+
+			// Stickmans <--> MapObjects
+			for (auto b: mapObjects)
+				{
+				sf::Vector2f closestPos = sf::Vector2f (INFINITY, INFINITY);
+
+				for (auto c: stickmans)
+					if (vecL (c->getBulletStart () - b->getPos ()) < vecL (closestPos))
+						closestPos = c->getBulletStart ();
+
+				b->Update (level, time, closestPos);
 				}
 
 			// Bullets
@@ -232,25 +242,28 @@ void SinglePlayer (sf::RenderWindow &window)
 				a->Update (level, time);
 			}
 		
-		// Snowflakes
+		/*// Rain
 		for (int i = 0; i < 100; i++)
 			{
 			snow [i] += snowSpeed [i]*time;
 			
 			if (snow [i] > camera.cam.getCenter ().y+window.getSize ().y/2) snow [i] -= window.getSize ().y;
 			if (snow [i] < camera.cam.getCenter ().y-window.getSize ().y/2) snow [i] += window.getSize ().y;
-			}
+			}*/
 		
 		graphics = clock ();
 		window.setView (camera.PlayerCam (sf::Vector2f (thisPlayerPos.x, thisPlayerPos.y-200)));
 
-		// Graphics
+		//--------Graphics--------//
 		window.clear (sf::Color (32, 32, 32));
 		background.setPosition (camera.cam.getCenter () - sf::Vector2f (background.getLocalBounds().width, background.getLocalBounds ().height)/2.f);
 		window.draw (background);
 
 		// Drawing Tile Map
-		level.Draw (window, map_sprite, thisPlayerPos);
+		if (DEBUG_VIEW) 
+			level.Draw (window, map_sprite, thisPlayerPos, 1, true);
+		else
+			level.Draw (window, map_sprite, thisPlayerPos, 1, false);
 		// Other objects
 		for (auto a: mapObjects)
 			a->Draw (window, time);
@@ -262,7 +275,7 @@ void SinglePlayer (sf::RenderWindow &window)
 		for (int i = 0; i < nBullets; i++)
 			if (onScreen (bullets [i].getPos (), window, camera))
 				bullets [i].Draw (window, time);
-			
+		/*//Rain
 		for (int i = int (camera.cam.getCenter ().x-window.getSize().x/2)/20; i < int (camera.cam.getCenter ().x+window.getSize ().x/2)/20; i++)
 			{
 			sf::CircleShape snowflake;
@@ -270,7 +283,7 @@ void SinglePlayer (sf::RenderWindow &window)
 			snowflake.setRadius (2);
 			snowflake.setFillColor (sf::Color::White);
 			window.draw (snowflake);
-			}
+			}*/
 			
 		end = clock ();
 		window.display ();	

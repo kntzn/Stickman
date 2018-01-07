@@ -1,6 +1,5 @@
 #pragma once
 #include <SFML/Graphics.hpp>
-#include "Map.h"
 #include "Mission.h"
 #include "Guns.h"
 
@@ -599,7 +598,7 @@ class NPC: public Stickman
 class Door: public Object
 	{
 	private:
-		int state = doorState::Locked;
+		int state = doorState::Off;
 		sf::Sprite sp;
 
 		int CheckBorders (Level &level, float time)
@@ -615,7 +614,7 @@ class Door: public Object
 					{
 					if (size.y > 17)
 						{
-						size.y -= 1000*time;
+						size.y -= 1600*time;
 						}
 					}
 				else if (size.y < 400)
@@ -673,9 +672,9 @@ class Door: public Object
 			window.draw (sp);
 			}
 
-		Door (sf::Image &image, sf::Vector2f POS, float M): Object (image, POS, M)
+		Door (sf::Image &image, sf::Vector2f POS, float M, int STATE): Object (image, POS, M)
 			{
-			state = doorState::Opened;
+			state = STATE;
 			size = sf::Vector2f (100, 400);
 			sp.setOrigin (50, 0);
 			sp.setTexture (texture);
@@ -683,3 +682,17 @@ class Door: public Object
 			}
 
 	};
+
+void mapObjectsSetup (Level &lvl, std::vector <Stickman*> &stickmans, std::vector <Object*> &mapObjects,
+					              sf::Image &stickman_img,            sf::Image &mapObjects_img,
+					              sf::Image &guns_img)
+	{
+	for (int y = 0; y < MAP_H/5; y++)
+		for (int x = 0; x < MAP_W/5; x++)
+			{
+			if (lvl.BlockMap [y] [x] == 7 || lvl.BlockMap [y] [x] == 8)
+				mapObjects.push_back (new Door (mapObjects_img, sf::Vector2f (x*500+250, y*500), 100, doorState::Off));
+			else if (lvl.BlockMap [y] [x] == 4 || lvl.BlockMap [y] [x] == 5)
+				mapObjects.push_back (new Door (mapObjects_img, sf::Vector2f (x*500+250, y*500), 100, doorState::Opened));
+			}
+	}

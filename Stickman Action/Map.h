@@ -1,6 +1,7 @@
 #pragma once
 #include <SFML/Graphics.hpp>
 #include <sstream>
+#include "Objects.h"
 #include "FileIO.h"
 #include "Mission.h" 
 #include "Blocks.h"
@@ -108,10 +109,10 @@ class Level
 			load (filename.c_str ());
 			}
 
-		void Draw (sf::RenderWindow &window, sf::Sprite map, sf::Vector2f center, float factor = 1)
+		void Draw (sf::RenderWindow &window, sf::Sprite map, sf::Vector2f center, float factor = 1, bool debug = false)
 			{
 			for (int x = int (center.x)/100 - int (11.f/factor); x < int (center.x)/100 + int (12.f/factor); x++)
-				for (int y = int (center.y)/100 - int (7.f/factor); y < int (center.y)/100 + int (5.f/factor); y++)
+				for (int y = int (center.y)/100 - int (8.f/factor); y < int (center.y)/100 + int (5.f/factor); y++)
 					if (0 <= x && x < MAP_W)
 						if (0 <= y && y < MAP_H)
 							if (TileMap [y] [x] != 0)
@@ -134,12 +135,14 @@ class Level
 
 								map.setPosition (x*100.f, y*100.f);
 								
-								//Debug mode
-								/*if (PhysicalMap [y] [x])
-									map.setColor (sf::Color::Green);
-								else
-									map.setColor (sf::Color::White);
-									*/
+								if (debug)
+									{
+									if (PhysicalMap [y] [x])
+										map.setColor (sf::Color::Green);
+									else
+										map.setColor (sf::Color::White);
+									}
+
 								window.draw (map);
 								}
 			}
