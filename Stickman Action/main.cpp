@@ -80,9 +80,9 @@ void SinglePlayer (sf::RenderWindow &window)
 	int nBullets = 0;
 	std::vector <Object*> mapObjects;
 
-	stickmans.push_back (new Player (stickman, guns, sf::Vector2f (500, 800), 80));
-	stickmans.push_back (new NPC (stickman, guns, sf::Vector2f (800, 800), 80, objectType::solder, 0, 1, 0));
-	mapObjects.push_back (new Door (door, sf::Vector2f (800, 500), 10));
+	stickmans.push_back (new Player (stickman, guns, sf::Vector2f (900, 800), 80));
+	stickmans.push_back (new NPC (stickman, guns, sf::Vector2f (1100, 800), 80, objectType::solder, 0, 1, 0));
+	mapObjects.push_back (new Door (door, sf::Vector2f (850, 500), 10));
 
 	Camera camera (sf::FloatRect (0, 0, float (window.getSize().x), float (window.getSize().y)));
 	
@@ -198,9 +198,14 @@ void SinglePlayer (sf::RenderWindow &window)
 				// Stickmans <--> MapObjects
 				for (auto b: mapObjects)
 					{
-					b->Update (level, time, thisPlayerPos);
-					}
+					sf::Vector2f closestPos = sf::Vector2f (INFINITY, INFINITY);
 
+					for (auto c: stickmans)
+						if (vecL (c->getBulletStart () - b->getPos ()) < vecL (closestPos))
+							closestPos = c->getBulletStart ();
+					
+					b->Update (level, time, closestPos);
+					}
 
 				if (!a->alive ())
 					{
@@ -238,6 +243,7 @@ void SinglePlayer (sf::RenderWindow &window)
 		
 		graphics = clock ();
 		window.setView (camera.PlayerCam (sf::Vector2f (thisPlayerPos.x, thisPlayerPos.y-200)));
+
 		// Graphics
 		window.clear (sf::Color (32, 32, 32));
 		background.setPosition (camera.cam.getCenter () - sf::Vector2f (background.getLocalBounds().width, background.getLocalBounds ().height)/2.f);
@@ -256,8 +262,7 @@ void SinglePlayer (sf::RenderWindow &window)
 		for (int i = 0; i < nBullets; i++)
 			if (onScreen (bullets [i].getPos (), window, camera))
 				bullets [i].Draw (window, time);
-		
-		
+			
 		for (int i = int (camera.cam.getCenter ().x-window.getSize().x/2)/20; i < int (camera.cam.getCenter ().x+window.getSize ().x/2)/20; i++)
 			{
 			sf::CircleShape snowflake;
@@ -268,9 +273,7 @@ void SinglePlayer (sf::RenderWindow &window)
 			}
 			
 		end = clock ();
-
 		window.display ();	
-
 		tickTimer++;
 		}
 	}

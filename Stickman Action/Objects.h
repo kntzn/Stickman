@@ -611,25 +611,64 @@ class Door: public Object
 			{
 			if (state == doorState::Opened)
 				{
-				if (vecL (target - position - sf::Vector2f (50, 0)) < 500)
+				if (vecL (target - position) < 600)
 					{
-					if (size.y > 17 + 400*time)
+					if (size.y > 17)
 						{
-						size.y -= 400*time;
-						std::cout << "aaaa" << std::endl;
-
+						size.y -= 1000*time;
 						}
 					}
-				else if (size.y < 400 - 400*time)
-					size.y += 400*time;
+				else if (size.y < 400)
+					{
+					size.y += 800*time;
+					}
+				}
 
-				sp.setTextureRect (sf::IntRect (100*state, 0, 100, size.y));
+			if (size.y > 400) size.y = 400;
+			if (size.y < 17) size.y = 17;
+
+			// PhysicalMap update
+			if (size.y < 100)
+				{
+				lvl.PhysicalMap [int (position.y/100)+0] [int (position.x/100)] = 0;
+				lvl.PhysicalMap [int (position.y/100)+1] [int (position.x/100)] = 0;
+				lvl.PhysicalMap [int (position.y/100)+2] [int (position.x/100)] = 0;
+				lvl.PhysicalMap [int (position.y/100)+3] [int (position.x/100)] = 0;
+				}
+			else if (size.y < 200)
+				{
+				lvl.PhysicalMap [int (position.y/100)+0] [int (position.x/100)] = 1;
+				lvl.PhysicalMap [int (position.y/100)+1] [int (position.x/100)] = 0;
+				lvl.PhysicalMap [int (position.y/100)+2] [int (position.x/100)] = 0;
+				lvl.PhysicalMap [int (position.y/100)+3] [int (position.x/100)] = 0;
+				}
+			else if (size.y < 300)
+				{
+				lvl.PhysicalMap [int (position.y/100)+0] [int (position.x/100)] = 1;
+				lvl.PhysicalMap [int (position.y/100)+1] [int (position.x/100)] = 1;
+				lvl.PhysicalMap [int (position.y/100)+2] [int (position.x/100)] = 0;
+				lvl.PhysicalMap [int (position.y/100)+3] [int (position.x/100)] = 0;
+				}
+			else if (size.y < 400)
+				{
+				lvl.PhysicalMap [int (position.y/100)+0] [int (position.x/100)] = 1;
+				lvl.PhysicalMap [int (position.y/100)+1] [int (position.x/100)] = 1;
+				lvl.PhysicalMap [int (position.y/100)+2] [int (position.x/100)] = 1;
+				lvl.PhysicalMap [int (position.y/100)+3] [int (position.x/100)] = 0;
+				}
+			else 
+				{
+				lvl.PhysicalMap [int (position.y/100)+0] [int (position.x/100)] = 1;
+				lvl.PhysicalMap [int (position.y/100)+1] [int (position.x/100)] = 1;
+				lvl.PhysicalMap [int (position.y/100)+2] [int (position.x/100)] = 1;
+				lvl.PhysicalMap [int (position.y/100)+3] [int (position.x/100)] = 1;
 				}
 			}
 
 	public:
 		void Draw (sf::RenderWindow &window, float time)
 			{
+			sp.setTextureRect (sf::IntRect (100*state, 0, 100, size.y));
 			sp.setPosition (position);
 			window.draw (sp);
 			}
@@ -638,6 +677,7 @@ class Door: public Object
 			{
 			state = doorState::Opened;
 			size = sf::Vector2f (100, 400);
+			sp.setOrigin (50, 0);
 			sp.setTexture (texture);
 			onGround = true;
 			}

@@ -133,6 +133,13 @@ class Level
 									}
 
 								map.setPosition (x*100.f, y*100.f);
+								
+								//Debug mode
+								/*if (PhysicalMap [y] [x])
+									map.setColor (sf::Color::Green);
+								else
+									map.setColor (sf::Color::White);
+									*/
 								window.draw (map);
 								}
 			}
