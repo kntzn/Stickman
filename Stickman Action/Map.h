@@ -1,6 +1,7 @@
 #pragma once
 #include <SFML/Graphics.hpp>
 #include <sstream>
+#include "Objects.h"
 #include "FileIO.h"
 #include "Mission.h" 
 #include "Blocks.h"
@@ -49,10 +50,12 @@ class Level
 			for (int x = 0; x < MAP_W; x++)
 				for (int y = 0; y < MAP_H; y++)
 					{
-					if (TileMap[y][x] == 0) PhysicalMap [y][x] = 0;
-					else if (TileMap[y][x] == 1) PhysicalMap [y][x] = 1;
-					else if (TileMap [y] [x] < 7) PhysicalMap [y] [x] = 0;
-					else if (TileMap [y] [x] < 9) PhysicalMap [y] [x] = 1;
+					if (TileMap[y][x] == 0)        PhysicalMap [y][x] = 0;
+					else if (TileMap[y][x] == 1)   PhysicalMap [y][x] = 1;
+					else if (TileMap [y] [x] < 7)  PhysicalMap [y] [x] = 0;
+					else if (TileMap [y] [x] < 9)  PhysicalMap [y] [x] = 1;
+					else if (TileMap [y] [x] < 11) PhysicalMap [y] [x] = 0;
+					else if (TileMap [y] [x] < 13) PhysicalMap [y] [x] = 1;
 					}
 			}
 
@@ -85,7 +88,7 @@ class Level
 				for (int x = 0; x < MAP_W/5; x++)
 					{
 					std::string s = std::to_string (BlockMap [y] [x]) + " ";
-					for (int i = 0; i < s.size(); i++)
+					for (size_t i = 0; i < s.size(); i++)
 						*(buf+cursor+i) = s[i];
 
 					cursor += s.size();
@@ -106,10 +109,10 @@ class Level
 			load (filename.c_str ());
 			}
 
-		void Draw (sf::RenderWindow &window, sf::Sprite map, sf::Vector2f center, float factor = 1)
+		void Draw (sf::RenderWindow &window, sf::Sprite map, sf::Vector2f center, float factor = 1, bool debug = false)
 			{
 			for (int x = int (center.x)/100 - int (11.f/factor); x < int (center.x)/100 + int (12.f/factor); x++)
-				for (int y = int (center.y)/100 - int (6.f/factor); y < int (center.y)/100 + int (6.f/factor); y++)
+				for (int y = int (center.y)/100 - int (8.f/factor); y < int (center.y)/100 + int (5.f/factor); y++)
 					if (0 <= x && x < MAP_W)
 						if (0 <= y && y < MAP_H)
 							if (TileMap [y] [x] != 0)
@@ -131,6 +134,15 @@ class Level
 									}
 
 								map.setPosition (x*100.f, y*100.f);
+								
+								if (debug)
+									{
+									if (PhysicalMap [y] [x])
+										map.setColor (sf::Color::Green);
+									else
+										map.setColor (sf::Color::White);
+									}
+
 								window.draw (map);
 								}
 			}
@@ -145,7 +157,8 @@ void mapEditor (sf::RenderWindow &window, Level &level, sf::Sprite mapSprite, ch
 	text.setFillColor (sf::Color (31, 63, 191));
 
 	float tileList = 0;
-	int tile = 0, nTileLists = 1;
+	int tile = 0;
+	const int nTileLists = 2;
 
 	bool lMousePrsd = false, rMousePrsd = false;
 	float MouseWheelPos = 0;

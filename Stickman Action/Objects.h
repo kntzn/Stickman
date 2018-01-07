@@ -1,6 +1,5 @@
 #pragma once
 #include <SFML/Graphics.hpp>
-#include "Map.h"
 #include "Mission.h"
 #include "Guns.h"
 
@@ -16,12 +15,22 @@ namespace npcAction
 		Rush
 		};
 	}
-
 float getNpcRange (unsigned int level)
 	{
-	return 2000*pow (level, 1.1f);
+	return float (pow (level, 1.1f))*2000.f;
 	}
 
+namespace doorState
+	{
+	enum
+		{
+		Opened,
+		Off,
+		Locked,
+		};
+	}
+
+//---------Classes---------//
 class Stickman: public Object
 	{
 	protected:
@@ -65,14 +74,15 @@ class Stickman: public Object
 					onGround = false;
 
 				// ceilling
-				if (level.PhysicalMap [int ((position.y - size.y-50)/100)] [int (position.x/100)] == 1)
+				if (level.PhysicalMap [int ((position.y - size.y)/100)] [int (position.x/100)] == 1)
 					{
-					position.y = int ((position.y)/100)*100.f + int ((size.y+50)/100)*100;
+					position.y = int ((position.y-size.y)/100)*100.f + int ((size.y)/100+2)*100;
 					velocity *= -0.8f;
+					return 1;
 					}
 
 				// side borders
-				for (int i = 0; i < int (size.y + 99)/100; i++)
+				for (int i = 0; i < int (size.y + 99)/100-1; i++)
 					{
 					if (level.PhysicalMap [int (position.y)/100 - i - 1] [int ((position.x + size.x/2)/100)] == 1)
 						{
@@ -88,6 +98,9 @@ class Stickman: public Object
 						}
 					}
 				}
+			else
+				onGround = false;
+
 			return 1;
 			}
 
@@ -164,36 +177,46 @@ class Player: public Stickman
 
 		void Control (Level &lvl, sf::Vector2f target, float time)
 			{
-			// Walls interactions controls
+			// Walls interactions controls (jumping & sliding)
 			int checkBordersResult = CheckBorders (lvl, time);
-		
-		
-			if (checkBordersResult == 2)
+			if (currentGun == gunSlot::Melee)
 				{
-				if (way == 0)
+				if (checkBordersResult == 2)
 					{
-					if (sf::Keyboard::isKeyPressed (sf::Keyboard::Space))
+					if (way == 0)
 						{
-						velocity.y = -7.5f;
-						velocity.x = -7.5f;
+						if (sf::Keyboard::isKeyPressed (sf::Keyboard::Space))
+							{
+							velocity.y = -7.5f;
+							velocity.x = -7.5f;
+							}
+						else if (sf::Keyboard::isKeyPressed (sf::Keyboard::W))
+							{
+							velocity.x = 0.1f;
+							if (velocity.y > 9.8f/8)
+								velocity.y += (9.8f/8 - velocity.y)*time;
+							}
 						}
 					}
-				
-				}
-			if (checkBordersResult == 3)
-				{
-				
-				if (way == 1)
+				if (checkBordersResult == 3)
 					{
-					if (sf::Keyboard::isKeyPressed (sf::Keyboard::Space))
+					if (way == 1)
 						{
-						velocity.y = -7.5f;
-						velocity.x = 7.5f;
+						if (sf::Keyboard::isKeyPressed (sf::Keyboard::Space))
+							{
+							velocity.y = -7.5f;
+							velocity.x = 7.5f;
+							}
+						else if (sf::Keyboard::isKeyPressed (sf::Keyboard::W))
+							{
+							velocity.x = -0.1f;
+							if (velocity.y > 9.8f/8)
+								velocity.y += (9.8f/8 - velocity.y)*time;
+							}
 						}
 					}
-				
 				}
-		
+
 			// Toolbar switch
 			if (sf::Keyboard::isKeyPressed (sf::Keyboard::Num1))
 				{
@@ -257,15 +280,17 @@ class Player: public Stickman
 			// Run & Walk controls
 			if (fabs (velocity.x) < 0.05f) velocity.x = 0;
 			bool sprint = sf::Keyboard::isKeyPressed (sf::Keyboard::LShift);
-			if (sf::Keyboard::isKeyPressed (sf::Keyboard::D) && onGround && velocity.x <  15) velocity.x += (15.f - velocity.x)*time;
-			if (sf::Keyboard::isKeyPressed (sf::Keyboard::A) && onGround && velocity.x > -15) velocity.x -= (velocity.x + 15.f)*time;
+			if (sf::Keyboard::isKeyPressed (sf::Keyboard::D) && onGround && velocity.x <  15) velocity.x += (15.f)*time;
+			if (sf::Keyboard::isKeyPressed (sf::Keyboard::A) && onGround && velocity.x > -15) velocity.x -= (15.f)*time;
 			if (onGround)
 				{
 				if (sf::Keyboard::isKeyPressed (sf::Keyboard::Space)) velocity.y = -5;
 				if (!sf::Keyboard::isKeyPressed (sf::Keyboard::A) && !sf::Keyboard::isKeyPressed (sf::Keyboard::D))
 					{
 					action = Action::Stay;
-					if (fabs (velocity.x) > 0) velocity.x /= 1.1f*time*60;
+					if      (velocity.x >  30.f*time) velocity.x -= 30.f*time;
+					else if (velocity.x < -30.f*time) velocity.x += 30.f*time;
+					else                              velocity.x = 0;
 					}
 				else if (fabs (velocity.x) > 11)
 					action = Action::Sprint;		
@@ -294,7 +319,6 @@ class Player: public Stickman
 			fraction = 0;
 			}
 	};
-
 class NPC: public Stickman
 	{
 	private:
@@ -317,14 +341,47 @@ class NPC: public Stickman
 				}
 			}
 
+		bool checkVisibility (Level &lvl, sf::Vector2f eyes, sf::Vector2f trg)
+			{
+			float k = (trg.y - eyes.y)/(trg.x - eyes.x + 0.00000001f);
+			if (eyes.x < trg.x)
+				{
+				float y = (eyes.y)/100;
+				if (-1 <= k && k <= 1)
+					for (int i = int (eyes.x/100); i < int (trg.x)/100; i++)
+						{
+						y += k;
+						if (lvl.PhysicalMap [int (y)] [i] == 1)
+							return false;
+						}
+				else
+					return false;
+				}
+			else
+				{
+				float y = (trg.y)/100;
+				if (-1 <= k && k <= 1)
+					for (int i = int (trg.x/100); i < int (eyes.x)/100; i++)
+						{
+						y += k;
+						if (lvl.PhysicalMap [int (y)] [i] == 1)
+							return false;
+						}
+				else 
+					return false;
+				}
+
+			return true;
+			}
+
 		void Control (Level &lvl, sf::Vector2f target, float time)
 			{
 			sf::Vector2f trgDiff = target - getBulletStart();
 			float trgAngle = atan2 (-trgDiff.x, trgDiff.y);
 			float dist = vecL (trgDiff);
+
 			// Logic
 			size.x = (guns [currentGun].getLength ()-30)*2;
-
 			int checkResult = CheckBorders (lvl, time);
 
 			switch (type)
@@ -355,7 +412,8 @@ class NPC: public Stickman
 					}
 				case objectType::solder:
 					{
-					if (hp != maxHp)
+					if (hp != maxHp || trigger ||
+						(checkVisibility (lvl, getBulletStart (), target) && ((way == 0 && trgDiff.x > 0) || (way == 1 && trgDiff.x < 0))))
 						{
 						if (hp < maxHp/4.f)
 							fightAction = npcAction::Back;
@@ -374,93 +432,101 @@ class NPC: public Stickman
 							}
 						walk (2.5f, time);
 						}
-					else if (fightAction == npcAction::Rush)
+					else
 						{
-						float angleBeforeUpdate = handAngle;
-
-						// Choosing the way
-						if (handAngle > 0) way = 1;
-						else               way = 0;
-
-						if (trgDiff.x > 0)
-							way = 0;
+						if (dist < 300)
+							currentGun = gunSlot::Melee;
 						else
-							way = 1;
-						walk (10.f, time);
+							currentGun = gunSlot::Primary;
 
-						shooting = false;
-						if (dist < getNpcRange (npcLevel))
+						if (fightAction == npcAction::Rush)
 							{
+							float angleBeforeUpdate = handAngle;
+
+							// Choosing the way
+							if (handAngle > 0) way = 1;
+							else               way = 0;
+
+							if (trgDiff.x > 0)
+								way = 0;
+							else
+								way = 1;
+							walk (10.f, time);
+
+							shooting = false;
+							if (dist < getNpcRange (npcLevel))
+								{
+								handAngle = angleBeforeUpdate;
+
+								// Aiming & shooting
+								if (trgAngle > handAngle+2.f*Pi*time)
+									handAngle += 2.f*Pi*time;
+								if (trgAngle < handAngle-2.f*Pi*time)
+									handAngle -= 2.f*Pi*time;
+								else if (guns [currentGun].isReady ())
+									{
+									guns [currentGun].fire ();
+									//shooting = true;
+									}
+								}
+							}
+						else if (fightAction == npcAction::Shoot)
+							{
+							// Choosing the way
+							if (handAngle > 0) way = 1;
+							else               way = 0;
+
+							// Stopping 
+							if (velocity.x >  7.5f*time) velocity.x -= 7.5f*time;
+							else if (velocity.x < -7.5f*time) velocity.x += 7.5f*time;
+							else velocity.x = 0;
+
+							shooting = false;
+							if (dist < getNpcRange (npcLevel))
+								{
+								// Aiming & shooting
+								if (trgAngle > handAngle+2.f*Pi*time)
+									handAngle += 2.f*Pi*time;
+								if (trgAngle < handAngle-2.f*Pi*time)
+									handAngle -= 2.f*Pi*time;
+								else if (guns [currentGun].isReady ())
+									{
+									guns [currentGun].fire ();
+									shooting = true;
+									}
+								}
+
+							}
+						else if (fightAction == npcAction::Back)
+							{
+							float angleBeforeUpdate = handAngle;
+
+							// Walking
+							if (trgDiff.x > 0)
+								way = 1;
+							else
+								way = 0;
+							walk (10.f, time);
+
 							handAngle = angleBeforeUpdate;
+							way = !way;
 
 							// Aiming & shooting
-							if (trgAngle > handAngle+2.f*Pi*time)
-								handAngle += 2.f*Pi*time;
-							if (trgAngle < handAngle-2.f*Pi*time)
-								handAngle -= 2.f*Pi*time;
-							else if (guns [currentGun].isReady ())
+							shooting = false;
+							if (dist < getNpcRange (npcLevel))
 								{
-								guns [currentGun].fire ();
-								//shooting = true;
+								if (trgAngle > handAngle+2.f*Pi*time)
+									handAngle += 2.f*Pi*time;
+								if (trgAngle < handAngle-2.f*Pi*time)
+									handAngle -= 2.f*Pi*time;
+								else if (guns [currentGun].isReady ())
+									{
+									guns [currentGun].fire ();
+									shooting = true;
+									}
 								}
+
 							}
-						}
-					else if (fightAction == npcAction::Shoot)
-						{
-						// Choosing the way
-						if (handAngle > 0) way = 1;
-						else               way = 0;
-
-						// Stopping 
-						if      (velocity.x >  7.5f*time) velocity.x -= 7.5f*time;
-						else if (velocity.x < -7.5f*time) velocity.x += 7.5f*time;
-						else velocity.x = 0;
-
-						shooting = false;
-						if (dist < getNpcRange (npcLevel))
-							{
-							// Aiming & shooting
-							if (trgAngle > handAngle+2.f*Pi*time)
-								handAngle += 2.f*Pi*time;
-							if (trgAngle < handAngle-2.f*Pi*time)
-								handAngle -= 2.f*Pi*time;
-							else if (guns [currentGun].isReady ())
-								{
-								guns [currentGun].fire ();
-								//shooting = true;
-								}
-							}
-
-						}
-					else if (fightAction == npcAction::Back)
-						{
-						float angleBeforeUpdate = handAngle;
-
-						// Walking
-						if (trgDiff.x > 0)
-							way = 1;
-						else
-							way = 0;
-						walk (10.f, time);
-
-						handAngle = angleBeforeUpdate;
-						way = !way;
-
-						// Aiming & shooting
-						shooting = false;
-						if (dist < getNpcRange (npcLevel))
-							{
-							if (trgAngle > handAngle+2.f*Pi*time)
-								handAngle += 2.f*Pi*time;
-							if (trgAngle < handAngle-2.f*Pi*time)
-								handAngle -= 2.f*Pi*time;
-							else if (guns [currentGun].isReady ())
-								{
-								guns [currentGun].fire ();
-								//shooting = true;
-								}
-							}
-
 						}
 
 					guns [currentGun].update (time);
@@ -529,66 +595,104 @@ class NPC: public Stickman
 			}
 	};
 
-class ChristmasTree: public Object
+class Door: public Object
 	{
-	public:
-		void Draw (sf::RenderWindow &window, float time)
-			{
-			sf::Sprite sp;
-			sp.setTexture (texture);
-			sp.setPosition (position);
-			sp.setOrigin (94, 311);
-			window.draw (sp);
-			}
+	private:
+		int state = doorState::Off;
+		sf::Sprite sp;
 
 		int CheckBorders (Level &level, float time)
 			{
-			// floor
-			if (level.PhysicalMap [int (position.y/100)] [int ((position.x - 30)/100)] == 1 || level.PhysicalMap [int (position.y/100)] [int ((position.x + 30)/100)] == 1)
-				{
-				position.y = int (position.y/100)*100.f;
-				velocity.y = 0;
-				onGround = true;
-				}
-			else
-				onGround = false;
-
-			// ceilling
-			if (level.PhysicalMap [int ((position.y - size.y)/100)] [int (position.x/100)] == 1)
-				{
-				position.y = int ((position.y)/100)*100.f + int (size.y)%100;
-				velocity *= -0.8f;
-				}
-
-			// side borders
-			for (int i = 0; i < int (size.y + 99)/100; i++)
-				{
-				if (level.PhysicalMap [int (position.y)/100 - i - 1] [int ((position.x + size.x/2)/100)] == 1)
-					{
-					velocity.x *= -0.3f;
-					position.x = int ((position.x + size.x/2)/100)*100 - size.x/2;
-					return 2;
-					}
-				if (level.PhysicalMap [int (position.y)/100 - i - 1] [int ((position.x - size.x/2)/100)] == 1)
-					{
-					velocity.x *= -0.3f;
-					position.x = int ((position.x - size.x/2)/100)*100 + 100 + size.x/2;
-					return 3;
-					}
-				}
-
-			return 1;
+			return true;
 			}
 
 		void Control (Level &lvl, sf::Vector2f target, float time)
 			{
-			CheckBorders (lvl, time);
+			if (state == doorState::Opened)
+				{
+				if (vecL (target - position) < 600)
+					{
+					if (size.y > 17)
+						{
+						size.y -= 1600*time;
+						}
+					}
+				else if (size.y < 400)
+					{
+					size.y += 800*time;
+					}
+				}
+
+			if (size.y > 400) size.y = 400;
+			if (size.y < 17) size.y = 17;
+
+			// PhysicalMap update
+			if (size.y < 100)
+				{
+				lvl.PhysicalMap [int (position.y/100)+0] [int (position.x/100)] = 0;
+				lvl.PhysicalMap [int (position.y/100)+1] [int (position.x/100)] = 0;
+				lvl.PhysicalMap [int (position.y/100)+2] [int (position.x/100)] = 0;
+				lvl.PhysicalMap [int (position.y/100)+3] [int (position.x/100)] = 0;
+				}
+			else if (size.y < 200)
+				{
+				lvl.PhysicalMap [int (position.y/100)+0] [int (position.x/100)] = 1;
+				lvl.PhysicalMap [int (position.y/100)+1] [int (position.x/100)] = 0;
+				lvl.PhysicalMap [int (position.y/100)+2] [int (position.x/100)] = 0;
+				lvl.PhysicalMap [int (position.y/100)+3] [int (position.x/100)] = 0;
+				}
+			else if (size.y < 300)
+				{
+				lvl.PhysicalMap [int (position.y/100)+0] [int (position.x/100)] = 1;
+				lvl.PhysicalMap [int (position.y/100)+1] [int (position.x/100)] = 1;
+				lvl.PhysicalMap [int (position.y/100)+2] [int (position.x/100)] = 0;
+				lvl.PhysicalMap [int (position.y/100)+3] [int (position.x/100)] = 0;
+				}
+			else if (size.y < 400)
+				{
+				lvl.PhysicalMap [int (position.y/100)+0] [int (position.x/100)] = 1;
+				lvl.PhysicalMap [int (position.y/100)+1] [int (position.x/100)] = 1;
+				lvl.PhysicalMap [int (position.y/100)+2] [int (position.x/100)] = 1;
+				lvl.PhysicalMap [int (position.y/100)+3] [int (position.x/100)] = 0;
+				}
+			else 
+				{
+				lvl.PhysicalMap [int (position.y/100)+0] [int (position.x/100)] = 1;
+				lvl.PhysicalMap [int (position.y/100)+1] [int (position.x/100)] = 1;
+				lvl.PhysicalMap [int (position.y/100)+2] [int (position.x/100)] = 1;
+				lvl.PhysicalMap [int (position.y/100)+3] [int (position.x/100)] = 1;
+				}
 			}
 
-
-		ChristmasTree (sf::Image &image, sf::Vector2f POS, float M): Object (image, POS, M)
+	public:
+		void Draw (sf::RenderWindow &window, float time)
 			{
-			size = sf::Vector2f (188, 311);
+			sp.setTextureRect (sf::IntRect (100*state, 0, 100, size.y));
+			sp.setPosition (position);
+			window.draw (sp);
+			}
+
+		Door (sf::Image &image, sf::Vector2f POS, float M, int STATE): Object (image, POS, M)
+			{
+			state = STATE;
+			size = sf::Vector2f (100, 400);
+			sp.setOrigin (50, 0);
+			sp.setTexture (texture);
+			onGround = true;
 			}
 
 	};
+
+void mapObjectsSetup (Level &lvl, std::vector <Stickman*> &stickmans, std::vector <Object*> &mapObjects,
+					              sf::Image &stickman_img,            sf::Image &mapObjects_img,
+					              sf::Image &guns_img)
+	{
+	for (int y = 0; y < MAP_H/5; y++)
+		for (int x = 0; x < MAP_W/5; x++)
+			{
+			if (lvl.BlockMap [y] [x] == 7 || lvl.BlockMap [y] [x] == 8)
+				mapObjects.push_back (new Door (mapObjects_img, sf::Vector2f (x*500+250, y*500), 100, doorState::Off));
+			else if (lvl.BlockMap [y] [x] == 4 || lvl.BlockMap [y] [x] == 5)
+				mapObjects.push_back (new Door (mapObjects_img, sf::Vector2f (x*500+250, y*500), 100, doorState::Opened));
+			}
+	}

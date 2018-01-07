@@ -174,7 +174,7 @@ class Gun
 
 			chargeAnimation = chrgAnim;
 
-			bullet = Bullet (img, sf::Vector2f (0, 0), sf::Vector2f (0, 0), 0, BULLETRECT, range, damage, 1.0f);
+			bullet = Bullet (img, sf::Vector2f (0, 0), sf::Vector2f (0, 0), 0, BULLETRECT, range, damage, (gType == gunType::Knife)? mass : 0.03f);
 			}
 
 		void update (float time)
@@ -256,7 +256,7 @@ class Gun
 			}
 	};
 
-	void CreateBulletsFromGun (Bullet* empty, int &id, sf::Vector2f position, float angle, float currentDisp, Gun gun, sf::Vector2f additionalVel, int owner = 0)
+void CreateBulletsFromGun (Bullet* empty, int &id, sf::Vector2f position, float angle, float currentDisp, Gun gun, sf::Vector2f additionalVel, int owner = 0)
 	{
 	for (int i = 0; i < gun.nBulletsPerShot(); i++)
 		{
@@ -272,7 +272,7 @@ Gun F12;
 
 void initGuns (sf::Image &img)
 	{
-	hands  = Gun (img, 0, gunType::Knife, triggerType::SemiAuto,   10, damageType::Kinetic, 60.f, 1, 1,  2.f,   0,       0,    120.f, 0.5f, 0,     sf::IntRect (280, 0, 25, 60),  false);
+	hands  = Gun (img, 0, gunType::Knife, triggerType::SemiAuto,  10,  damageType::Kinetic, 60.f, 1, 1,  0.5f,   0,       0.1f,    120.f, 0.5f, 0,     sf::IntRect (280, 0, 25, 60),  false);
 	PSR400 = Gun (img, 1, gunType::sRifle, triggerType::Hold,     200, damageType::Plasma,  80.f, 1, 1,  500.f, Pi/32.f, 10,   210.f, 3.f,  0,     sf::IntRect (540, 88, 36, 5),  true);
 	F12    = Gun (img, 2, gunType::Pistol, triggerType::SemiAuto, 35,  damageType::Kinetic, 60.f, 1, 12, 200.f, Pi/16.f, 1.5f, 142.f, 3.f,  0.25f, sf::IntRect (275, 155, 10, 6), false);
 	}

@@ -49,11 +49,11 @@ class Object
 
 		void Update (Level &level, float time, sf::Vector2f target = sf::Vector2f (0, 0), bool TRG = false)
 			{
+			trigger = TRG;
+			position += velocity*75.0f*time;
 			Control (level, target, time);
 
 			if (!onGround) velocity.y += 9.8f*time;
-			trigger = TRG;
-			position += velocity*75.0f*time;
 			}
 
 		virtual void Draw (sf::RenderWindow &window, float time) = 0;
@@ -66,5 +66,5 @@ class Object
 		bool         alive   () { return hp > 0; }
 		float        getHp ()   { return hp; }
 
-		void damage (float dmg) { hp -= dmg; }
+		void damage (float dmg, sf::Vector2f kick = sf::Vector2f (0, 0)) { hp -= dmg; velocity += kick;  }
 	};
