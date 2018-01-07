@@ -1,6 +1,5 @@
 #pragma once
 #include <SFML/Graphics.hpp>
-#include "Map.h"
 #include "Mission.h"
 #include "Guns.h"
 
@@ -21,6 +20,17 @@ float getNpcRange (unsigned int level)
 	return float (pow (level, 1.1f))*2000.f;
 	}
 
+namespace doorState
+	{
+	enum
+		{
+		Opened,
+		Off,
+		Locked,
+		};
+	}
+
+//---------Classes---------//
 class Stickman: public Object
 	{
 	protected:
@@ -585,66 +595,104 @@ class NPC: public Stickman
 			}
 	};
 
-class ChristmasTree: public Object
+class Door: public Object
 	{
-	public:
-		void Draw (sf::RenderWindow &window, float time)
-			{
-			sf::Sprite sp;
-			sp.setTexture (texture);
-			sp.setPosition (position);
-			sp.setOrigin (94, 311);
-			window.draw (sp);
-			}
+	private:
+		int state = doorState::Off;
+		sf::Sprite sp;
 
 		int CheckBorders (Level &level, float time)
 			{
-			// floor
-			if (level.PhysicalMap [int (position.y/100)] [int ((position.x - 30)/100)] == 1 || level.PhysicalMap [int (position.y/100)] [int ((position.x + 30)/100)] == 1)
-				{
-				position.y = int (position.y/100)*100.f;
-				velocity.y = 0;
-				onGround = true;
-				}
-			else
-				onGround = false;
-
-			// ceilling
-			if (level.PhysicalMap [int ((position.y - size.y)/100)] [int (position.x/100)] == 1)
-				{
-				position.y = int ((position.y)/100)*100.f + int (size.y)%100;
-				velocity *= -0.8f;
-				}
-
-			// side borders
-			for (int i = 0; i < int (size.y + 99)/100; i++)
-				{
-				if (level.PhysicalMap [int (position.y)/100 - i - 1] [int ((position.x + size.x/2)/100)] == 1)
-					{
-					velocity.x *= -0.3f;
-					position.x = int ((position.x + size.x/2)/100)*100 - size.x/2;
-					return 2;
-					}
-				if (level.PhysicalMap [int (position.y)/100 - i - 1] [int ((position.x - size.x/2)/100)] == 1)
-					{
-					velocity.x *= -0.3f;
-					position.x = int ((position.x - size.x/2)/100)*100 + 100 + size.x/2;
-					return 3;
-					}
-				}
-
-			return 1;
+			return true;
 			}
 
 		void Control (Level &lvl, sf::Vector2f target, float time)
 			{
-			CheckBorders (lvl, time);
+			if (state == doorState::Opened)
+				{
+				if (vecL (target - position) < 600)
+					{
+					if (size.y > 17)
+						{
+						size.y -= 1600*time;
+						}
+					}
+				else if (size.y < 400)
+					{
+					size.y += 800*time;
+					}
+				}
+
+			if (size.y > 400) size.y = 400;
+			if (size.y < 17) size.y = 17;
+
+			// PhysicalMap update
+			if (size.y < 100)
+				{
+				lvl.PhysicalMap [int (position.y/100)+0] [int (position.x/100)] = 0;
+				lvl.PhysicalMap [int (position.y/100)+1] [int (position.x/100)] = 0;
+				lvl.PhysicalMap [int (position.y/100)+2] [int (position.x/100)] = 0;
+				lvl.PhysicalMap [int (position.y/100)+3] [int (position.x/100)] = 0;
+				}
+			else if (size.y < 200)
+				{
+				lvl.PhysicalMap [int (position.y/100)+0] [int (position.x/100)] = 1;
+				lvl.PhysicalMap [int (position.y/100)+1] [int (position.x/100)] = 0;
+				lvl.PhysicalMap [int (position.y/100)+2] [int (position.x/100)] = 0;
+				lvl.PhysicalMap [int (position.y/100)+3] [int (position.x/100)] = 0;
+				}
+			else if (size.y < 300)
+				{
+				lvl.PhysicalMap [int (position.y/100)+0] [int (position.x/100)] = 1;
+				lvl.PhysicalMap [int (position.y/100)+1] [int (position.x/100)] = 1;
+				lvl.PhysicalMap [int (position.y/100)+2] [int (position.x/100)] = 0;
+				lvl.PhysicalMap [int (position.y/100)+3] [int (position.x/100)] = 0;
+				}
+			else if (size.y < 400)
+				{
+				lvl.PhysicalMap [int (position.y/100)+0] [int (position.x/100)] = 1;
+				lvl.PhysicalMap [int (position.y/100)+1] [int (position.x/100)] = 1;
+				lvl.PhysicalMap [int (position.y/100)+2] [int (position.x/100)] = 1;
+				lvl.PhysicalMap [int (position.y/100)+3] [int (position.x/100)] = 0;
+				}
+			else 
+				{
+				lvl.PhysicalMap [int (position.y/100)+0] [int (position.x/100)] = 1;
+				lvl.PhysicalMap [int (position.y/100)+1] [int (position.x/100)] = 1;
+				lvl.PhysicalMap [int (position.y/100)+2] [int (position.x/100)] = 1;
+				lvl.PhysicalMap [int (position.y/100)+3] [int (position.x/100)] = 1;
+				}
 			}
 
-
-		ChristmasTree (sf::Image &image, sf::Vector2f POS, float M): Object (image, POS, M)
+	public:
+		void Draw (sf::RenderWindow &window, float time)
 			{
-			size = sf::Vector2f (188, 311);
+			sp.setTextureRect (sf::IntRect (100*state, 0, 100, size.y));
+			sp.setPosition (position);
+			window.draw (sp);
+			}
+
+		Door (sf::Image &image, sf::Vector2f POS, float M, int STATE): Object (image, POS, M)
+			{
+			state = STATE;
+			size = sf::Vector2f (100, 400);
+			sp.setOrigin (50, 0);
+			sp.setTexture (texture);
+			onGround = true;
 			}
 
 	};
+
+void mapObjectsSetup (Level &lvl, std::vector <Stickman*> &stickmans, std::vector <Object*> &mapObjects,
+					              sf::Image &stickman_img,            sf::Image &mapObjects_img,
+					              sf::Image &guns_img)
+	{
+	for (int y = 0; y < MAP_H/5; y++)
+		for (int x = 0; x < MAP_W/5; x++)
+			{
+			if (lvl.BlockMap [y] [x] == 7 || lvl.BlockMap [y] [x] == 8)
+				mapObjects.push_back (new Door (mapObjects_img, sf::Vector2f (x*500+250, y*500), 100, doorState::Off));
+			else if (lvl.BlockMap [y] [x] == 4 || lvl.BlockMap [y] [x] == 5)
+				mapObjects.push_back (new Door (mapObjects_img, sf::Vector2f (x*500+250, y*500), 100, doorState::Opened));
+			}
+	}
