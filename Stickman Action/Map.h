@@ -49,10 +49,12 @@ class Level
 			for (int x = 0; x < MAP_W; x++)
 				for (int y = 0; y < MAP_H; y++)
 					{
-					if (TileMap[y][x] == 0) PhysicalMap [y][x] = 0;
-					else if (TileMap[y][x] == 1) PhysicalMap [y][x] = 1;
-					else if (TileMap [y] [x] < 7) PhysicalMap [y] [x] = 0;
-					else if (TileMap [y] [x] < 9) PhysicalMap [y] [x] = 1;
+					if (TileMap[y][x] == 0)        PhysicalMap [y][x] = 0;
+					else if (TileMap[y][x] == 1)   PhysicalMap [y][x] = 1;
+					else if (TileMap [y] [x] < 7)  PhysicalMap [y] [x] = 0;
+					else if (TileMap [y] [x] < 9)  PhysicalMap [y] [x] = 1;
+					else if (TileMap [y] [x] < 11) PhysicalMap [y] [x] = 0;
+					else if (TileMap [y] [x] < 13) PhysicalMap [y] [x] = 1;
 					}
 			}
 
@@ -145,7 +147,8 @@ void mapEditor (sf::RenderWindow &window, Level &level, sf::Sprite mapSprite, ch
 	text.setFillColor (sf::Color (31, 63, 191));
 
 	float tileList = 0;
-	int tile = 0, nTileLists = 1;
+	int tile = 0;
+	const int nTileLists = 2;
 
 	bool lMousePrsd = false, rMousePrsd = false;
 	float MouseWheelPos = 0;

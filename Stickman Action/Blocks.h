@@ -62,12 +62,19 @@ int Blocks [] [5] [5] =
 	3, 3, 3, 3, 3,
 	3, 3, 3, 3, 3,
 	3, 3, 3, 3, 3,
-	// Vent pad
-	3, 3, 3, 3, 3,
-	3, 3, 3, 3, 3,
-	3, 3, 3, 3, 3,
-	3, 3, 3, 3, 3,
-	1, 1, 1, 1, 1,
+	// Window pad
+	10, 9,  10, 10, 9,
+	9,  10, 10, 9,  10,
+	10, 9,  10, 10, 9,
+	10, 10, 10, 9,  10,
+	1,  1,  1,  1,  1,
+	// Left dock
+	11, 2, 10, 10, 10,
+	11, 2, 10, 10, 10,
+	11, 4, 10, 10, 10,
+	11, 2, 10, 10, 10,
+	11, 1,  1,  1,  1,
+
 	};
 
 char blocksNames [] [32] =
@@ -82,5 +89,6 @@ char blocksNames [] [32] =
 	"Vent to simple locked door pad",
 	"Simple to vent locked door pad",
 	"Vent block",
-	"Vent pad"
+	"Window pad",
+	"Left dock"
 	};

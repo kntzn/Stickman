@@ -21,6 +21,17 @@ float getNpcRange (unsigned int level)
 	return float (pow (level, 1.1f))*2000.f;
 	}
 
+namespace doorState
+	{
+	enum
+		{
+		Opened,
+		Off,
+		Locked,
+		};
+	}
+
+//---------Classes---------//
 class Stickman: public Object
 	{
 	protected:
@@ -585,66 +596,50 @@ class NPC: public Stickman
 			}
 	};
 
-class ChristmasTree: public Object
+class Door: public Object
 	{
-	public:
-		void Draw (sf::RenderWindow &window, float time)
-			{
-			sf::Sprite sp;
-			sp.setTexture (texture);
-			sp.setPosition (position);
-			sp.setOrigin (94, 311);
-			window.draw (sp);
-			}
+	private:
+		int state = doorState::Locked;
+		sf::Sprite sp;
 
 		int CheckBorders (Level &level, float time)
 			{
-			// floor
-			if (level.PhysicalMap [int (position.y/100)] [int ((position.x - 30)/100)] == 1 || level.PhysicalMap [int (position.y/100)] [int ((position.x + 30)/100)] == 1)
-				{
-				position.y = int (position.y/100)*100.f;
-				velocity.y = 0;
-				onGround = true;
-				}
-			else
-				onGround = false;
-
-			// ceilling
-			if (level.PhysicalMap [int ((position.y - size.y)/100)] [int (position.x/100)] == 1)
-				{
-				position.y = int ((position.y)/100)*100.f + int (size.y)%100;
-				velocity *= -0.8f;
-				}
-
-			// side borders
-			for (int i = 0; i < int (size.y + 99)/100; i++)
-				{
-				if (level.PhysicalMap [int (position.y)/100 - i - 1] [int ((position.x + size.x/2)/100)] == 1)
-					{
-					velocity.x *= -0.3f;
-					position.x = int ((position.x + size.x/2)/100)*100 - size.x/2;
-					return 2;
-					}
-				if (level.PhysicalMap [int (position.y)/100 - i - 1] [int ((position.x - size.x/2)/100)] == 1)
-					{
-					velocity.x *= -0.3f;
-					position.x = int ((position.x - size.x/2)/100)*100 + 100 + size.x/2;
-					return 3;
-					}
-				}
-
-			return 1;
+			return true;
 			}
 
 		void Control (Level &lvl, sf::Vector2f target, float time)
 			{
-			CheckBorders (lvl, time);
+			if (state == doorState::Opened)
+				{
+				if (vecL (target - position - sf::Vector2f (50, 0)) < 500)
+					{
+					if (size.y > 17 + 400*time)
+						{
+						size.y -= 400*time;
+						std::cout << "aaaa" << std::endl;
+
+						}
+					}
+				else if (size.y < 400 - 400*time)
+					size.y += 400*time;
+
+				sp.setTextureRect (sf::IntRect (100*state, 0, 100, size.y));
+				}
 			}
 
-
-		ChristmasTree (sf::Image &image, sf::Vector2f POS, float M): Object (image, POS, M)
+	public:
+		void Draw (sf::RenderWindow &window, float time)
 			{
-			size = sf::Vector2f (188, 311);
+			sp.setPosition (position);
+			window.draw (sp);
+			}
+
+		Door (sf::Image &image, sf::Vector2f POS, float M): Object (image, POS, M)
+			{
+			state = doorState::Opened;
+			size = sf::Vector2f (100, 400);
+			sp.setTexture (texture);
+			onGround = true;
 			}
 
 	};

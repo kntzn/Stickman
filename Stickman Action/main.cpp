@@ -43,19 +43,30 @@ void SinglePlayer (sf::RenderWindow &window)
 	//---------Loading img---------//
 	sf::Image stickman = LoadImage ("stickman.png");
 	
+	// Map guns
 	sf::Image guns; guns.loadFromFile ("Data/img/guns.png");
 	guns.createMaskFromColor (sf::Color (0, 0, 255));
-
-	sf::Image tree; 
-	tree.loadFromFile ("Data/img/tree.png");
-	tree.createMaskFromColor (sf::Color (0, 0, 255));
-
-	sf::Texture tx; tx.loadFromFile ("Data/img/tileset.png");
-	sf::Sprite map_sprite; map_sprite.setTexture (tx);
 	initGuns (guns);
 
-	Level level (0, 0);
+	// Trees
+	sf::Image door; 
+	door.loadFromFile ("Data/img/mapObjects.png");
+	door.createMaskFromColor (sf::Color (0, 0, 255));
 
+	// Map sprites
+	sf::Image map_img; map_img.loadFromFile ("Data/img/tileset.png");
+	map_img.createMaskFromColor (sf::Color (0, 0, 255));
+	sf::Texture tx; tx.loadFromImage (map_img);
+	sf::Sprite map_sprite; map_sprite.setTexture (tx);
+
+	// Background
+	sf::Texture backgr;
+	backgr.loadFromFile ("Data/img/BGR.png");
+	sf::Sprite background;
+	background.setTexture (backgr);
+
+	//--------Creating level--------//
+	Level level (0, 0);
 	mapEditor (window, level, map_sprite, "Data/map/0.txt");
 
 	//---------Objects list---------//
@@ -71,7 +82,7 @@ void SinglePlayer (sf::RenderWindow &window)
 
 	stickmans.push_back (new Player (stickman, guns, sf::Vector2f (500, 800), 80));
 	stickmans.push_back (new NPC (stickman, guns, sf::Vector2f (800, 800), 80, objectType::solder, 0, 1, 0));
-	mapObjects.push_back (new ChristmasTree (tree, sf::Vector2f (900, 800), 20));
+	mapObjects.push_back (new Door (door, sf::Vector2f (800, 500), 10));
 
 	Camera camera (sf::FloatRect (0, 0, float (window.getSize().x), float (window.getSize().y)));
 	
@@ -166,8 +177,8 @@ void SinglePlayer (sf::RenderWindow &window)
 							bullets [i].getPos ().y < a->getPos ().y &&
 							bullets [i].getPos ().y > a->getPos ().y - a->getSize ().y)
 							{
-							a->damage (bullets [i].getDmg (), 
-									   (bullets [i].getVel ()*bullets [i].getMass ()));
+							a->damage (bullets [i].getDmg (),
+								(bullets [i].getVel ()*bullets [i].getMass ()));
 
 							bullets [i].decreaseDmg (bullets [i].getDmg ());
 							}
@@ -183,6 +194,13 @@ void SinglePlayer (sf::RenderWindow &window)
 
 				if (a->isShoot ())
 					CreateBulletsFromGun (bullets+nBullets, nBullets, a->getBulletStart (), a->getHandAngle (), a->getDisp (), a->getGun (), a->getVel (), a->getType());
+
+				// Stickmans <--> MapObjects
+				for (auto b: mapObjects)
+					{
+					b->Update (level, time, thisPlayerPos);
+					}
+
 
 				if (!a->alive ())
 					{
@@ -208,7 +226,7 @@ void SinglePlayer (sf::RenderWindow &window)
 			for (auto a: mapObjects)
 				a->Update (level, time);
 			}
-
+		
 		// Snowflakes
 		for (int i = 0; i < 100; i++)
 			{
@@ -222,6 +240,9 @@ void SinglePlayer (sf::RenderWindow &window)
 		window.setView (camera.PlayerCam (sf::Vector2f (thisPlayerPos.x, thisPlayerPos.y-200)));
 		// Graphics
 		window.clear (sf::Color (32, 32, 32));
+		background.setPosition (camera.cam.getCenter () - sf::Vector2f (background.getLocalBounds().width, background.getLocalBounds ().height)/2.f);
+		window.draw (background);
+
 		// Drawing Tile Map
 		level.Draw (window, map_sprite, thisPlayerPos);
 		// Other objects
