@@ -84,7 +84,6 @@ void SinglePlayer (sf::RenderWindow &window)
 	bool levelFinished = false;
 
 	Camera camera (sf::FloatRect (0, 0, float (window.getSize().x), float (window.getSize().y)));
-	
 	//---------Variables---------//
 	// Timers
 	sf::Clock delayTimer;
@@ -257,6 +256,7 @@ void SinglePlayer (sf::RenderWindow &window)
 		//--------Graphics--------//
 		window.clear (sf::Color (32, 32, 32));
 		background.setPosition (camera.cam.getCenter () - sf::Vector2f (background.getLocalBounds().width, background.getLocalBounds ().height)/2.f);
+		background.setScale (1.f/camera.getZoom (), 1.f/camera.getZoom ());
 		window.draw (background);
 
 		// Drawing Tile Map

@@ -20,3 +20,8 @@ float rangeRand (float left, float right)
 	else
 		return left + float (rand ()%(int ((right-left)*10000)))/10000.f;
 	}
+
+float getNumberLastDigits (float num, int n)
+	{
+	return num - int (num/pow (10, n))*pow (10, n);
+	}

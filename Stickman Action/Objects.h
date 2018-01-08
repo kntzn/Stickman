@@ -71,6 +71,18 @@ class Stickman: public Object
 					velocity.y = 0;
 					onGround = true;
 					}
+				else if (level.PhysicalMap [int (position.y/100)] [int ((position.x)/100)] == 2)
+					{
+					position.y = int (position.y/100)*100.f + float (int (position.x)%100);
+					velocity.y = velocity.x;
+					onGround = true;
+					}
+				else if (level.PhysicalMap [int (position.y/100)] [int ((position.x)/100)] == 3)
+					{
+					position.y = int (position.y/100)*100.f - float (int (position.x)%100)+100;
+					velocity.y = -velocity.x;
+					onGround = true;
+					}
 				else
 					onGround = false;
 
@@ -731,9 +743,9 @@ void mapObjectsSetup (Level &lvl, std::vector <Stickman*> &stickmans, std::vecto
 				mapObjects.push_back (new Door (mapObjects_img, sf::Vector2f (x*500+250, y*500), 100, doorState::Off));
 			else if (lvl.BlockMap [y] [x] == 4 || lvl.BlockMap [y] [x] == 5)
 				mapObjects.push_back (new Door (mapObjects_img, sf::Vector2f (x*500+250, y*500), 100, doorState::Opened));
-			else if (lvl.BlockMap [y] [x] == 13)
-				stickmans.push_back (new NPC (stickman_img, guns_img, sf::Vector2f (x*500+250, y*500+400), 80, objectType::soldier, 0, 1, 1));
 			else if (lvl.BlockMap [y] [x] == 14)
+				stickmans.push_back (new NPC (stickman_img, guns_img, sf::Vector2f (x*500+250, y*500+400), 80, objectType::soldier, 0, 1, 1));
+			else if (lvl.BlockMap [y] [x] == 15)
 				stickmans.push_back (new NPC (stickman_img, guns_img, sf::Vector2f (x*500+250, y*500+400), 80, objectType::soldier, 0, 1, 0));
 			else if (lvl.BlockMap [y] [x] == 4 || lvl.BlockMap [y] [x] == 15)
 				mapObjects.push_back (new Door (mapObjects_img, sf::Vector2f (x*500+250, y*500), 100, doorState::Opened));
