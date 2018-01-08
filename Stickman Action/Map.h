@@ -17,6 +17,9 @@ sf::Color mapColors [] =
 class Level
 	{
 	public:
+		sf::Vector2i startPos;
+		sf::Vector2i finishPos;
+
 		int TileMap     [MAP_H][MAP_W] = {};
 		int PhysicalMap [MAP_H][MAP_W] = {};
 		int BlockMap    [MAP_H/5] [MAP_W/5] = {};
@@ -66,6 +69,15 @@ class Level
 			loadFromFile (filename, buf, bufSize, true);
 
 			size_t cursor = 0;
+			startPos.x = atoi (buf+cursor);
+			cursor += std::to_string (atoi (buf+cursor)).size ()+1;
+			startPos.y = atoi (buf+cursor);
+			cursor += std::to_string (atoi (buf+cursor)).size ()+1;
+			finishPos.x = atoi (buf+cursor);
+			cursor += std::to_string (atoi (buf+cursor)).size ()+1;
+			finishPos.y = atoi (buf+cursor);
+			cursor += std::to_string (atoi (buf+cursor)).size ()+1;
+
 			for (int y = 0; y < MAP_H/5; y++)
 				for (int x = 0; x < MAP_W/5 && cursor < bufSize; x++)
 					{
@@ -83,6 +95,15 @@ class Level
 			char* buf;
 			size_t cursor = 0, bufSize = MAP_H*MAP_W/25*2;
 			buf = (char*) calloc (bufSize*2, sizeof (char));
+
+			std::string s = std::to_string (startPos.x) + " " +
+				            std::to_string (startPos.y) + " " +
+							std::to_string (finishPos.x) + " " +
+							std::to_string (finishPos.y) + " ";
+
+			for (size_t i = 0; i < s.size (); i++)
+				*(buf+cursor+i) = s [i];
+			cursor += s.size ();
 
 			for (int y = 0; y < MAP_H/5; y++)
 				for (int x = 0; x < MAP_W/5; x++)
@@ -237,6 +258,12 @@ void mapEditor (sf::RenderWindow &window, Level &level, sf::Sprite mapSprite, ch
 
 		if (sf::Keyboard::isKeyPressed (sf::Keyboard::Comma)  && tileList > 1.f*time)              tileList -= 1.f*time;
 		if (sf::Keyboard::isKeyPressed (sf::Keyboard::Period) && tileList < nTileLists - 1.f*time) tileList += 1.f*time;
+
+		// Start & finish position
+		if (sf::Keyboard::isKeyPressed (sf::Keyboard::S))
+			level.startPos = sf::Vector2i (cursor/500.f);
+		if (sf::Keyboard::isKeyPressed (sf::Keyboard::F))
+			level.finishPos = sf::Vector2i (cursor/500.f);
 
 		// Drawing
 		cam.cam.move (0, -200.f/cam.getZoom());

@@ -37,6 +37,7 @@ class Stickman: public Object
 		// ?
 		unsigned int action = Action::Stay;
 		bool way = 0;
+		sf::Vector2f trg;
 		unsigned int fraction = -1;
 
 		// Appearance
@@ -105,8 +106,19 @@ class Stickman: public Object
 			}
 
 	public:
-		void Draw (sf::RenderWindow &window, float time)
+		void Draw (sf::RenderWindow &window, float time, bool DEBUG_VIEW = false)
 			{
+			if (DEBUG_VIEW)
+				{
+				sf::Vertex targetLine [] =
+					{
+					sf::Vertex (getBulletStart (), sf::Color::Red),
+					sf::Vertex (trg, sf::Color::Red)
+					};
+
+				window.draw (targetLine, 2, sf::PrimitiveType::LinesStrip);
+				}
+
 			sf::Sprite hands;
 			sf::Sprite gunCharge;
 
@@ -177,6 +189,7 @@ class Player: public Stickman
 
 		void Control (Level &lvl, sf::Vector2f target, float time)
 			{
+			trg = (target - sf::Vector2f (1920, 1080)/2.f)+getBulletStart();
 			// Walls interactions controls (jumping & sliding)
 			int checkBordersResult = CheckBorders (lvl, time);
 			if (currentGun == gunSlot::Melee)
@@ -376,6 +389,7 @@ class NPC: public Stickman
 
 		void Control (Level &lvl, sf::Vector2f target, float time)
 			{
+			trg = target;
 			sf::Vector2f trgDiff = target - getBulletStart();
 			float trgAngle = atan2 (-trgDiff.x, trgDiff.y);
 			float dist = vecL (trgDiff);
@@ -410,7 +424,7 @@ class NPC: public Stickman
 
 					break;
 					}
-				case objectType::solder:
+				case objectType::soldier:
 					{
 					if (hp != maxHp || trigger ||
 						(checkVisibility (lvl, getBulletStart (), target) && ((way == 0 && trgDiff.x > 0) || (way == 1 && trgDiff.x < 0))))
@@ -578,7 +592,7 @@ class NPC: public Stickman
 					app.clothes = 2;
 					break;
 					}
-				case objectType::solder:
+				case objectType::soldier:
 					{
 					velocity = sf::Vector2f (0, 0);
 					handAngle = Pi*WAY-Pi/2.f;
@@ -597,9 +611,12 @@ class NPC: public Stickman
 
 class Door: public Object
 	{
+	#define DOOR_DETECTOR_RANGE 600
+
 	private:
 		int state = doorState::Off;
 		sf::Sprite sp;
+		sf::Vector2f trg;
 
 		int CheckBorders (Level &level, float time)
 			{
@@ -608,9 +625,10 @@ class Door: public Object
 
 		void Control (Level &lvl, sf::Vector2f target, float time)
 			{
+			trg = target;
 			if (state == doorState::Opened)
 				{
-				if (vecL (target - position) < 600)
+				if (vecL (target - position) < DOOR_DETECTOR_RANGE)
 					{
 					if (size.y > 17)
 						{
@@ -665,8 +683,23 @@ class Door: public Object
 			}
 
 	public:
-		void Draw (sf::RenderWindow &window, float time)
+		void Draw (sf::RenderWindow &window, float time, bool DEBUG_VIEW = false)
 			{
+			if (DEBUG_VIEW)
+				{
+				sf::Vertex targetLine [] =
+					{
+					sf::Vertex (getPos (), sf::Color::Red),
+					sf::Vertex (trg, sf::Color::Red)
+					};
+				if (vecL (trg - position) < DOOR_DETECTOR_RANGE)
+					{
+					targetLine [0].color = sf::Color::Blue;
+					targetLine [1].color = sf::Color::Blue;
+					}
+
+				window.draw (targetLine, 2, sf::PrimitiveType::LinesStrip);
+				}
 			sp.setTextureRect (sf::IntRect (100*state, 0, 100, size.y));
 			sp.setPosition (position);
 			window.draw (sp);
@@ -674,6 +707,7 @@ class Door: public Object
 
 		Door (sf::Image &image, sf::Vector2f POS, float M, int STATE): Object (image, POS, M)
 			{
+			trg = position;
 			state = STATE;
 			size = sf::Vector2f (100, 400);
 			sp.setOrigin (50, 0);
@@ -681,18 +715,27 @@ class Door: public Object
 			onGround = true;
 			}
 
+	#undef DOOR_DETECTOR_RANGE
 	};
 
 void mapObjectsSetup (Level &lvl, std::vector <Stickman*> &stickmans, std::vector <Object*> &mapObjects,
 					              sf::Image &stickman_img,            sf::Image &mapObjects_img,
 					              sf::Image &guns_img)
 	{
+	stickmans.push_back (new Player (stickman_img, guns_img, sf::Vector2f (lvl.startPos*500 + sf::Vector2i (250, 400)), 80));
+
 	for (int y = 0; y < MAP_H/5; y++)
 		for (int x = 0; x < MAP_W/5; x++)
 			{
 			if (lvl.BlockMap [y] [x] == 7 || lvl.BlockMap [y] [x] == 8)
 				mapObjects.push_back (new Door (mapObjects_img, sf::Vector2f (x*500+250, y*500), 100, doorState::Off));
 			else if (lvl.BlockMap [y] [x] == 4 || lvl.BlockMap [y] [x] == 5)
+				mapObjects.push_back (new Door (mapObjects_img, sf::Vector2f (x*500+250, y*500), 100, doorState::Opened));
+			else if (lvl.BlockMap [y] [x] == 13)
+				stickmans.push_back (new NPC (stickman_img, guns_img, sf::Vector2f (x*500+250, y*500+400), 80, objectType::soldier, 0, 1, 1));
+			else if (lvl.BlockMap [y] [x] == 14)
+				stickmans.push_back (new NPC (stickman_img, guns_img, sf::Vector2f (x*500+250, y*500+400), 80, objectType::soldier, 0, 1, 0));
+			else if (lvl.BlockMap [y] [x] == 4 || lvl.BlockMap [y] [x] == 15)
 				mapObjects.push_back (new Door (mapObjects_img, sf::Vector2f (x*500+250, y*500), 100, doorState::Opened));
 			}
 	}

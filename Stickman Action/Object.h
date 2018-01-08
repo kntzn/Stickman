@@ -7,7 +7,7 @@ enum objectType
 	player,
 	citizen,
 	turret,
-	solder,
+	soldier,
 	sergeant,
 	capitain,
 	general,
@@ -56,7 +56,7 @@ class Object
 			if (!onGround) velocity.y += 9.8f*time;
 			}
 
-		virtual void Draw (sf::RenderWindow &window, float time) = 0;
+		virtual void Draw (sf::RenderWindow &window, float time, bool DEBUG_VIEW = false) = 0;
 
 		sf::Vector2f getPos  () { return position; }
 		sf::Vector2f getVel  () { return velocity; }

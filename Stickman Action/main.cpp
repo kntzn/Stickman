@@ -77,13 +77,11 @@ void SinglePlayer (sf::RenderWindow &window)
 	int nBullets = 0;
 	std::vector <Object*> mapObjects;
 
-	stickmans.push_back (new Player (stickman, guns, sf::Vector2f (900, 800), 80));
-	stickmans.push_back (new NPC (stickman, guns, sf::Vector2f (1100, 800), 80, objectType::solder, 0, 1, 0));
-
 	//--------Creating level--------//
 	Level level (0, 0);
 	mapEditor (window, level, map_sprite, "Data/map/0.txt");
 	mapObjectsSetup (level, stickmans, mapObjects, stickman, mapObjects_img, guns);
+	bool levelFinished = false;
 
 	Camera camera (sf::FloatRect (0, 0, float (window.getSize().x), float (window.getSize().y)));
 	
@@ -102,7 +100,7 @@ void SinglePlayer (sf::RenderWindow &window)
 	// speedtests variables
 	clock_t physics = 0, graphics = 0, end = 0;
 
-	while (window.isOpen ())
+	while (window.isOpen () && !(levelFinished && sf::Keyboard::isKeyPressed (sf::Keyboard::Escape)))
 		{
 		//--------Time--------//
 		// global delay timer
@@ -197,6 +195,9 @@ void SinglePlayer (sf::RenderWindow &window)
 					thisPlayerPos = a->getBulletStart ();
 
 					a->Update (level, time, sf::Vector2f (sf::Mouse::getPosition (window))*1920.f/float (window.getSize ().x), lMousePrsd);
+
+					if (sf::Vector2i (thisPlayerPos)/500 == level.finishPos)
+						levelFinished = true;
 					}
 				else
 					a->Update (level, time, thisPlayerPos);
@@ -220,9 +221,11 @@ void SinglePlayer (sf::RenderWindow &window)
 				sf::Vector2f closestPos = sf::Vector2f (INFINITY, INFINITY);
 
 				for (auto c: stickmans)
-					if (vecL (c->getBulletStart () - b->getPos ()) < vecL (closestPos))
+					{
+					if (vecL  (c->getBulletStart ()-b->getPos()) < vecL (closestPos-b->getPos()))
 						closestPos = c->getBulletStart ();
-
+					}
+				
 				b->Update (level, time, closestPos);
 				}
 
@@ -237,9 +240,6 @@ void SinglePlayer (sf::RenderWindow &window)
 					nBullets--;
 					}
 				}
-
-			for (auto a: mapObjects)
-				a->Update (level, time);
 			}
 		
 		/*// Rain
@@ -266,11 +266,11 @@ void SinglePlayer (sf::RenderWindow &window)
 			level.Draw (window, map_sprite, thisPlayerPos, 1, false);
 		// Other objects
 		for (auto a: mapObjects)
-			a->Draw (window, time);
+			a->Draw (window, time, DEBUG_VIEW);
 
 		// Drawing stickmans
 		for (auto a: stickmans)
-			a->Draw (window, time);
+			a->Draw (window, time, DEBUG_VIEW);
 		// Bullets
 		for (int i = 0; i < nBullets; i++)
 			if (onScreen (bullets [i].getPos (), window, camera))
