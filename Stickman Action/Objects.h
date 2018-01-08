@@ -722,6 +722,8 @@ void mapObjectsSetup (Level &lvl, std::vector <Stickman*> &stickmans, std::vecto
 					              sf::Image &stickman_img,            sf::Image &mapObjects_img,
 					              sf::Image &guns_img)
 	{
+	stickmans.push_back (new Player (stickman_img, guns_img, sf::Vector2f (lvl.startPos*500 + sf::Vector2i (250, 400)), 80));
+
 	for (int y = 0; y < MAP_H/5; y++)
 		for (int x = 0; x < MAP_W/5; x++)
 			{
@@ -733,5 +735,7 @@ void mapObjectsSetup (Level &lvl, std::vector <Stickman*> &stickmans, std::vecto
 				stickmans.push_back (new NPC (stickman_img, guns_img, sf::Vector2f (x*500+250, y*500+400), 80, objectType::soldier, 0, 1, 1));
 			else if (lvl.BlockMap [y] [x] == 14)
 				stickmans.push_back (new NPC (stickman_img, guns_img, sf::Vector2f (x*500+250, y*500+400), 80, objectType::soldier, 0, 1, 0));
+			else if (lvl.BlockMap [y] [x] == 4 || lvl.BlockMap [y] [x] == 15)
+				mapObjects.push_back (new Door (mapObjects_img, sf::Vector2f (x*500+250, y*500), 100, doorState::Opened));
 			}
 	}

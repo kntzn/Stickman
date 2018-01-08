@@ -77,12 +77,11 @@ void SinglePlayer (sf::RenderWindow &window)
 	int nBullets = 0;
 	std::vector <Object*> mapObjects;
 
-	stickmans.push_back (new Player (stickman, guns, sf::Vector2f (900, 800), 80));
-	
 	//--------Creating level--------//
 	Level level (0, 0);
 	mapEditor (window, level, map_sprite, "Data/map/0.txt");
 	mapObjectsSetup (level, stickmans, mapObjects, stickman, mapObjects_img, guns);
+	bool levelFinished = false;
 
 	Camera camera (sf::FloatRect (0, 0, float (window.getSize().x), float (window.getSize().y)));
 	
@@ -101,7 +100,7 @@ void SinglePlayer (sf::RenderWindow &window)
 	// speedtests variables
 	clock_t physics = 0, graphics = 0, end = 0;
 
-	while (window.isOpen ())
+	while (window.isOpen () && !(levelFinished && sf::Keyboard::isKeyPressed (sf::Keyboard::Escape)))
 		{
 		//--------Time--------//
 		// global delay timer
@@ -196,6 +195,9 @@ void SinglePlayer (sf::RenderWindow &window)
 					thisPlayerPos = a->getBulletStart ();
 
 					a->Update (level, time, sf::Vector2f (sf::Mouse::getPosition (window))*1920.f/float (window.getSize ().x), lMousePrsd);
+
+					if (sf::Vector2i (thisPlayerPos)/500 == level.finishPos)
+						levelFinished = true;
 					}
 				else
 					a->Update (level, time, thisPlayerPos);
@@ -238,7 +240,6 @@ void SinglePlayer (sf::RenderWindow &window)
 					nBullets--;
 					}
 				}
-
 			}
 		
 		/*// Rain

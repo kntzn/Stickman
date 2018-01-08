@@ -92,6 +92,18 @@ const int Blocks [] [5] [5] =
 	2, 2, 2, 2, 2,
 	2, 2, 2, 2, 2,
 	1, 1, 1, 1, 1,
+	// Door pad
+	2, 2, 2, 2, 2,
+	2, 2, 2, 2, 2,
+	2, 4, 2, 4, 2,
+	2, 2, 2, 2, 2,
+	1, 1, 1, 1, 1,
+	// Window wall
+	10, 9,  10, 10, 9,
+	9,  10, 10, 9,  10,
+	10, 9,  10, 10, 9,
+	10, 10, 9,  10, 10,
+	9,  10, 10, 10, 10,
 	};
 
 const char blocksNames [] [32] =
@@ -110,5 +122,7 @@ const char blocksNames [] [32] =
 	"Left dock",
 	"Right dock",
 	"Pad with soldier looking left",
-	"Pad with soldier looking right"
+	"Pad with soldier looking right",
+	"Door pad",
+	"Window wall"
 	};

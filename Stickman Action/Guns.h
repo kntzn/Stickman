@@ -3,6 +3,7 @@
 #include "Object.h"
 #include "Map"
 #include "Sticklib.h"
+#include "Draw.h"
 #include "sfVector.h"
 
 // TODO: replace sf::Image with sf::Texture
