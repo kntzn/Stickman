@@ -23,10 +23,10 @@ class Camera
 
 		sf::View update (sf::RenderWindow &window, sf::Vector2i MousePos, float deltaZoom, float time)
 			{
-			if (MousePos.x < 30)								   cam.move (float (-100)/zoom*time, 0);
-			if (MousePos.x > signed int (window.getSize().x - 30)) cam.move (float  (100)/zoom*time, 0);
-			if (MousePos.y < 30)								   cam.move (0, float (-100)/zoom*time);
-			if (MousePos.y > signed int (window.getSize().y - 30)) cam.move (0, float ( 100)/zoom*time);
+			if (MousePos.x < 30)								   cam.move (-1000.f/zoom*time, 0);
+			if (MousePos.x > signed int (window.getSize().x - 30)) cam.move (1000.f/zoom*time, 0);
+			if (MousePos.y < 30)								   cam.move (0, -1000.f/zoom*time);
+			if (MousePos.y > signed int (window.getSize().y - 30)) cam.move (0,  1000.f/zoom*time);
 
 			cam.zoom (1-float (deltaZoom)/10);
 			zoom /= 1-float (deltaZoom)/10;

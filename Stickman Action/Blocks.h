@@ -80,7 +80,12 @@ int Blocks [] [5] [5] =
 	10, 10, 10, 4, 11,
 	10, 10, 10, 4, 11,
 	1,  1,  1,  1, 11,
-
+	// Wall block
+	2, 2, 2, 2, 2,
+	2, 2, 2, 2, 2,
+	2, 2, 2, 2, 2,
+	2, 2, 2, 2, 2,
+	2, 2, 2, 2, 2,
 	};
 
 char blocksNames [] [32] =
@@ -98,4 +103,5 @@ char blocksNames [] [32] =
 	"Window pad",
 	"Left dock",
 	"Right dock",
+	"Wall block"
 	};
