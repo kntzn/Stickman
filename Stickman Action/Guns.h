@@ -86,7 +86,7 @@ class Bullet: public Object
 			distance += vecL (velocity)*time;
 			}
 
-		void Draw (sf::RenderWindow &window, float time)
+		void Draw (sf::RenderWindow &window, float time, bool DEBUG_VIEW = false)
 			{
 			Draw::SimpleTxtr (window, texture, txtr, position, -angle*toDeg+90);
 			//Test with big red point

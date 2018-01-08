@@ -220,9 +220,11 @@ void SinglePlayer (sf::RenderWindow &window)
 				sf::Vector2f closestPos = sf::Vector2f (INFINITY, INFINITY);
 
 				for (auto c: stickmans)
-					if (vecL (c->getBulletStart () - b->getPos ()) < vecL (closestPos))
+					{
+					if (vecL  (c->getBulletStart ()-b->getPos()) < vecL (closestPos-b->getPos()))
 						closestPos = c->getBulletStart ();
-
+					}
+				
 				b->Update (level, time, closestPos);
 				}
 
@@ -238,8 +240,6 @@ void SinglePlayer (sf::RenderWindow &window)
 					}
 				}
 
-			for (auto a: mapObjects)
-				a->Update (level, time);
 			}
 		
 		/*// Rain
@@ -266,11 +266,11 @@ void SinglePlayer (sf::RenderWindow &window)
 			level.Draw (window, map_sprite, thisPlayerPos, 1, false);
 		// Other objects
 		for (auto a: mapObjects)
-			a->Draw (window, time);
+			a->Draw (window, time, DEBUG_VIEW);
 
 		// Drawing stickmans
 		for (auto a: stickmans)
-			a->Draw (window, time);
+			a->Draw (window, time, DEBUG_VIEW);
 		// Bullets
 		for (int i = 0; i < nBullets; i++)
 			if (onScreen (bullets [i].getPos (), window, camera))

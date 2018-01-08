@@ -37,6 +37,7 @@ class Stickman: public Object
 		// ?
 		unsigned int action = Action::Stay;
 		bool way = 0;
+		sf::Vector2f trg;
 		unsigned int fraction = -1;
 
 		// Appearance
@@ -105,8 +106,19 @@ class Stickman: public Object
 			}
 
 	public:
-		void Draw (sf::RenderWindow &window, float time)
+		void Draw (sf::RenderWindow &window, float time, bool DEBUG_VIEW = false)
 			{
+			if (DEBUG_VIEW)
+				{
+				sf::Vertex targetLine [] =
+					{
+					sf::Vertex (getBulletStart (), sf::Color::Red),
+					sf::Vertex (trg, sf::Color::Red)
+					};
+
+				window.draw (targetLine, 2, sf::PrimitiveType::LinesStrip);
+				}
+
 			sf::Sprite hands;
 			sf::Sprite gunCharge;
 
@@ -177,6 +189,7 @@ class Player: public Stickman
 
 		void Control (Level &lvl, sf::Vector2f target, float time)
 			{
+			trg = (target - sf::Vector2f (1920, 1080)/2.f)+getBulletStart();
 			// Walls interactions controls (jumping & sliding)
 			int checkBordersResult = CheckBorders (lvl, time);
 			if (currentGun == gunSlot::Melee)
@@ -376,6 +389,7 @@ class NPC: public Stickman
 
 		void Control (Level &lvl, sf::Vector2f target, float time)
 			{
+			trg = target;
 			sf::Vector2f trgDiff = target - getBulletStart();
 			float trgAngle = atan2 (-trgDiff.x, trgDiff.y);
 			float dist = vecL (trgDiff);
@@ -597,9 +611,12 @@ class NPC: public Stickman
 
 class Door: public Object
 	{
+	#define DOOR_DETECTOR_RANGE 600
+
 	private:
 		int state = doorState::Off;
 		sf::Sprite sp;
+		sf::Vector2f trg;
 
 		int CheckBorders (Level &level, float time)
 			{
@@ -608,9 +625,10 @@ class Door: public Object
 
 		void Control (Level &lvl, sf::Vector2f target, float time)
 			{
+			trg = target;
 			if (state == doorState::Opened)
 				{
-				if (vecL (target - position) < 600)
+				if (vecL (target - position) < DOOR_DETECTOR_RANGE)
 					{
 					if (size.y > 17)
 						{
@@ -665,8 +683,23 @@ class Door: public Object
 			}
 
 	public:
-		void Draw (sf::RenderWindow &window, float time)
+		void Draw (sf::RenderWindow &window, float time, bool DEBUG_VIEW = false)
 			{
+			if (DEBUG_VIEW)
+				{
+				sf::Vertex targetLine [] =
+					{
+					sf::Vertex (getPos (), sf::Color::Red),
+					sf::Vertex (trg, sf::Color::Red)
+					};
+				if (vecL (trg - position) < DOOR_DETECTOR_RANGE)
+					{
+					targetLine [0].color = sf::Color::Blue;
+					targetLine [1].color = sf::Color::Blue;
+					}
+
+				window.draw (targetLine, 2, sf::PrimitiveType::LinesStrip);
+				}
 			sp.setTextureRect (sf::IntRect (100*state, 0, 100, size.y));
 			sp.setPosition (position);
 			window.draw (sp);
@@ -674,6 +707,7 @@ class Door: public Object
 
 		Door (sf::Image &image, sf::Vector2f POS, float M, int STATE): Object (image, POS, M)
 			{
+			trg = position;
 			state = STATE;
 			size = sf::Vector2f (100, 400);
 			sp.setOrigin (50, 0);
@@ -681,6 +715,7 @@ class Door: public Object
 			onGround = true;
 			}
 
+	#undef DOOR_DETECTOR_RANGE
 	};
 
 void mapObjectsSetup (Level &lvl, std::vector <Stickman*> &stickmans, std::vector <Object*> &mapObjects,
