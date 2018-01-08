@@ -80,6 +80,12 @@ const int Blocks [] [5] [5] =
 	10, 10, 10, 4, 11,
 	10, 10, 10, 4, 11,
 	1,  1,  1,  1, 11,
+	// Wall block
+	2, 2, 2, 2, 2,
+	2, 2, 2, 2, 2,
+	2, 2, 2, 2, 2,
+	2, 2, 2, 2, 2,
+  2, 2, 2, 2, 2,
 	// Pad with soldier looking left
 	2, 2, 2, 2, 2,
 	2, 2, 2, 2, 2,
@@ -121,6 +127,7 @@ const char blocksNames [] [32] =
 	"Window pad",
 	"Left dock",
 	"Right dock",
+	"Wall wall"
 	"Pad with soldier looking left",
 	"Pad with soldier looking right",
 	"Door pad",

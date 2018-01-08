@@ -186,7 +186,6 @@ void mapEditor (sf::RenderWindow &window, Level &level, sf::Sprite mapSprite, ch
 
 	bool windowFocus = true;
 	Camera cam (sf::FloatRect (0, 0, float (window.getSize().x), float (window.getSize().y)));
-
 	sf::Clock delayTimer;
 	float avgDelay = 0;
 
@@ -239,11 +238,12 @@ void mapEditor (sf::RenderWindow &window, Level &level, sf::Sprite mapSprite, ch
 		sf::Vector2f cursor = window.mapPixelToCoords (MousePos);
 
  	    // Map scrolling
+		/*
 		if (MousePos.x < 30)								    cam.cam.move (-500/cam.getZoom ()*time, 0);
 		if (MousePos.x > signed int (window.getSize ().x - 30)) cam.cam.move ( 500/cam.getZoom ()*time, 0);
 		if (MousePos.y < 30)								    cam.cam.move (0, -500/cam.getZoom ()*time);
 		if (MousePos.y > signed int (window.getSize ().y - 30)) cam.cam.move (0,  500/cam.getZoom ()*time);
-
+*/
 		// Choosing tile
 		if (sf::Keyboard::isKeyPressed (sf::Keyboard::Num1)) tile = 1 + int (tileList)*9;
 		if (sf::Keyboard::isKeyPressed (sf::Keyboard::Num2)) tile = 2 + int (tileList)*9;
@@ -266,7 +266,10 @@ void mapEditor (sf::RenderWindow &window, Level &level, sf::Sprite mapSprite, ch
 			level.finishPos = sf::Vector2i (cursor/500.f);
 
 		// Drawing
-		window.setView (cam.update (window, sf::Mouse::getPosition (window), MouseWheelPos - initMouseWheelPos, time));
+		cam.cam.move (0, -200.f/cam.getZoom());
+
+		window.setView (cam.update (window, sf::Mouse::getPosition (window), MouseWheelPos - initMouseWheelPos, time));;
+		cam.cam.move (0, 200.f/cam.getZoom ());
 		window.clear ();
 
 		mapSprite.setColor (sf::Color::White);
