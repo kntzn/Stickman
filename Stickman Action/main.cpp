@@ -78,8 +78,7 @@ void SinglePlayer (sf::RenderWindow &window)
 	std::vector <Object*> mapObjects;
 
 	stickmans.push_back (new Player (stickman, guns, sf::Vector2f (900, 800), 80));
-	stickmans.push_back (new NPC (stickman, guns, sf::Vector2f (1100, 800), 80, objectType::solder, 0, 1, 0));
-
+	
 	//--------Creating level--------//
 	Level level (0, 0);
 	mapEditor (window, level, map_sprite, "Data/map/0.txt");

@@ -7,7 +7,7 @@ enum objectType
 	player,
 	citizen,
 	turret,
-	solder,
+	soldier,
 	sergeant,
 	capitain,
 	general,

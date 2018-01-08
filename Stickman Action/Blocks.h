@@ -1,6 +1,6 @@
 #pragma once
 
-int Blocks [] [5] [5] =
+const int Blocks [] [5] [5] =
 	{
 	// Empty
 	0, 0, 0, 0, 0,
@@ -80,10 +80,21 @@ int Blocks [] [5] [5] =
 	10, 10, 10, 4, 11,
 	10, 10, 10, 4, 11,
 	1,  1,  1,  1, 11,
-
+	// Pad with soldier looking left
+	2, 2, 2, 2, 2,
+	2, 2, 2, 2, 2,
+	2, 2, 2, 2, 2,
+	2, 2, 2, 2, 2,
+	1, 1, 1, 1, 1,
+	// Pad with soldier looking right
+	2, 2, 2, 2, 2,
+	2, 2, 2, 2, 2,
+	2, 2, 2, 2, 2,
+	2, 2, 2, 2, 2,
+	1, 1, 1, 1, 1,
 	};
 
-char blocksNames [] [32] =
+const char blocksNames [] [32] =
 	{
 	"Empty",
 	"Basic pad",
@@ -98,4 +109,6 @@ char blocksNames [] [32] =
 	"Window pad",
 	"Left dock",
 	"Right dock",
+	"Pad with soldier looking left",
+	"Pad with soldier looking right"
 	};

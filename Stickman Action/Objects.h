@@ -424,7 +424,7 @@ class NPC: public Stickman
 
 					break;
 					}
-				case objectType::solder:
+				case objectType::soldier:
 					{
 					if (hp != maxHp || trigger ||
 						(checkVisibility (lvl, getBulletStart (), target) && ((way == 0 && trgDiff.x > 0) || (way == 1 && trgDiff.x < 0))))
@@ -592,7 +592,7 @@ class NPC: public Stickman
 					app.clothes = 2;
 					break;
 					}
-				case objectType::solder:
+				case objectType::soldier:
 					{
 					velocity = sf::Vector2f (0, 0);
 					handAngle = Pi*WAY-Pi/2.f;
@@ -729,5 +729,9 @@ void mapObjectsSetup (Level &lvl, std::vector <Stickman*> &stickmans, std::vecto
 				mapObjects.push_back (new Door (mapObjects_img, sf::Vector2f (x*500+250, y*500), 100, doorState::Off));
 			else if (lvl.BlockMap [y] [x] == 4 || lvl.BlockMap [y] [x] == 5)
 				mapObjects.push_back (new Door (mapObjects_img, sf::Vector2f (x*500+250, y*500), 100, doorState::Opened));
+			else if (lvl.BlockMap [y] [x] == 13)
+				stickmans.push_back (new NPC (stickman_img, guns_img, sf::Vector2f (x*500+250, y*500+400), 80, objectType::soldier, 0, 1, 1));
+			else if (lvl.BlockMap [y] [x] == 14)
+				stickmans.push_back (new NPC (stickman_img, guns_img, sf::Vector2f (x*500+250, y*500+400), 80, objectType::soldier, 0, 1, 0));
 			}
 	}
