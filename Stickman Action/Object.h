@@ -11,7 +11,10 @@ enum objectType
 	sergeant,
 	capitain,
 	general,
-	commander
+	commander,
+	door,
+	console,
+	lift
 	};
 
 class Object
@@ -63,8 +66,8 @@ class Object
 		sf::Vector2f getSize () { return size; }
 		float        getMass () { return mass; }
 		int          getType () { return type; }
-		bool         alive   () { return hp > 0; }
 		float        getHp ()   { return hp; }
+		bool         alive () { return hp > 0; }
 
 		void damage (float dmg, sf::Vector2f kick = sf::Vector2f (0, 0)) { hp -= dmg; velocity += kick;  }
 	};

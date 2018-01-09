@@ -27,6 +27,7 @@ namespace doorState
 		Opened,
 		Off,
 		Locked,
+		LiftDoor
 		};
 	}
 
@@ -39,6 +40,7 @@ class Stickman: public Object
 		bool way = 0;
 		sf::Vector2f trg;
 		unsigned int fraction = -1;
+		bool activation = false;
 
 		// Appearance
 		Appearance app;
@@ -192,6 +194,7 @@ class Stickman: public Object
 			{
 			return position + sf::Vector2f (0, -160.f);
 			}
+		bool getActivation () { return activation; }
 	};
 
 class Player: public Stickman
@@ -202,6 +205,12 @@ class Player: public Stickman
 		void Control (Level &lvl, sf::Vector2f target, float time)
 			{
 			trg = (target - sf::Vector2f (1920, 1080)/2.f)+getBulletStart();
+			//
+			if (sf::Keyboard::isKeyPressed (sf::Keyboard::E))
+				activation = true;
+			else 
+				activation = false;
+
 			// Walls interactions controls (jumping & sliding)
 			int checkBordersResult = CheckBorders (lvl, time);
 			if (currentGun == gunSlot::Melee)
@@ -621,6 +630,61 @@ class NPC: public Stickman
 			}
 	};
 
+class Console: public Object
+	{
+	private:
+		int state = doorState::Off;
+		sf::Sprite sp;		
+		sf::Vector2f trg;
+
+		int CheckBorders (Level &level, float time)
+			{
+			return true;
+			}
+
+		void Control (Level &lvl, sf::Vector2f target, float time)
+			{
+			trg = target;
+			if (trigger)
+				if (vecL (target - position) > 400)
+					trigger = false;
+			}
+
+	public:
+		void Draw (sf::RenderWindow &window, float time, bool DEBUG_VIEW = false)
+			{
+			if (DEBUG_VIEW)
+				{
+				sf::Vertex targetLine [] =
+					{
+					sf::Vertex (getPos (), sf::Color::Red),
+					sf::Vertex (trg, sf::Color::Red)
+					};
+				if (vecL (trg - position) < 400 && trigger)
+					{
+					targetLine [0].color = sf::Color::Blue;
+					targetLine [1].color = sf::Color::Blue;
+					}
+
+				window.draw (targetLine, 2, sf::PrimitiveType::LinesStrip);
+				}
+			sp.setTextureRect (sf::IntRect (400, 0, size.x, size.y));
+			sp.setPosition (position);
+			window.draw (sp);
+			}
+
+		Console (sf::Image &image, sf::Vector2f POS, float M): Object (image, POS, M)
+			{
+			onGround = true;
+			size = sf::Vector2f (100, 200);
+			type = objectType::console;
+
+			sp.setOrigin (50, 200);
+			sp.setTexture (texture);
+			}
+
+	};
+
 class Door: public Object
 	{
 	#define DOOR_DETECTOR_RANGE 600
@@ -719,12 +783,15 @@ class Door: public Object
 
 		Door (sf::Image &image, sf::Vector2f POS, float M, int STATE): Object (image, POS, M)
 			{
+			onGround = true;
+			size = sf::Vector2f (100, 400);
+			type = objectType::door;
+
 			trg = position;
 			state = STATE;
-			size = sf::Vector2f (100, 400);
+
 			sp.setOrigin (50, 0);
 			sp.setTexture (texture);
-			onGround = true;
 			}
 
 	#undef DOOR_DETECTOR_RANGE
@@ -743,11 +810,21 @@ void mapObjectsSetup (Level &lvl, std::vector <Stickman*> &stickmans, std::vecto
 				mapObjects.push_back (new Door (mapObjects_img, sf::Vector2f (x*500+250, y*500), 100, doorState::Off));
 			else if (lvl.BlockMap [y] [x] == 4 || lvl.BlockMap [y] [x] == 5)
 				mapObjects.push_back (new Door (mapObjects_img, sf::Vector2f (x*500+250, y*500), 100, doorState::Opened));
-			else if (lvl.BlockMap [y] [x] == 14)
+			else if (lvl.BlockMap [y] [x] == 13)
 				stickmans.push_back (new NPC (stickman_img, guns_img, sf::Vector2f (x*500+250, y*500+400), 80, objectType::soldier, 0, 1, 1));
-			else if (lvl.BlockMap [y] [x] == 15)
+			else if (lvl.BlockMap [y] [x] == 14)
 				stickmans.push_back (new NPC (stickman_img, guns_img, sf::Vector2f (x*500+250, y*500+400), 80, objectType::soldier, 0, 1, 0));
 			else if (lvl.BlockMap [y] [x] == 16)
 				mapObjects.push_back (new Door (mapObjects_img, sf::Vector2f (x*500+250, y*500), 100, doorState::Opened));
+			else if (lvl.BlockMap [y] [x] == 22)
+				{
+				mapObjects.push_back (new Console (mapObjects_img, sf::Vector2f (x*500+250, y*500+400), 30));
+				mapObjects.push_back (new Door    (mapObjects_img, sf::Vector2f (x*500+450, y*500), 100, doorState::LiftDoor));
+				}
+			else if (lvl.BlockMap [y] [x] == 23)
+				{
+				mapObjects.push_back (new Console (mapObjects_img, sf::Vector2f (x*500+250, y*500+400), 30));
+				mapObjects.push_back (new Door (mapObjects_img, sf::Vector2f (x*500+50, y*500), 100, doorState::LiftDoor));
+				}
 			}
 	}

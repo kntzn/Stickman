@@ -218,14 +218,22 @@ void SinglePlayer (sf::RenderWindow &window)
 			for (auto b: mapObjects)
 				{
 				sf::Vector2f closestPos = sf::Vector2f (INFINITY, INFINITY);
+				bool consoleActivation = false;
 
 				for (auto c: stickmans)
 					{
-					if (vecL  (c->getBulletStart ()-b->getPos()) < vecL (closestPos-b->getPos()))
+					if (vecL (c->getBulletStart ()-b->getPos ()) < vecL (closestPos-b->getPos ()))
+						{
 						closestPos = c->getBulletStart ();
+						consoleActivation = c->getActivation ();
+						}
 					}
 				
-				b->Update (level, time, closestPos);
+				if (b->getType () == objectType::door)
+					b->Update (level, time, closestPos);
+				else if (b->getType () == objectType::console)
+					b->Update (level, time, closestPos, consoleActivation);
+					
 				}
 
 			// Bullets
