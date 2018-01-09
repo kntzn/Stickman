@@ -65,22 +65,22 @@ class Stickman: public Object
 				(position + size/2.f).x < MAP_W*100.f && (position).y < MAP_H*100.f)
 				{
 				// floor
-				if (level.PhysicalMap [int (position.y/100)] [int ((position.x - 30)/100)] == 1 || level.PhysicalMap [int (position.y/100)] [int ((position.x + 30)/100)] == 1)
+				if (level.PhysicalMap [int ((position.y-1)/100)] [int ((position.x)/100)] == 2)
 					{
-					position.y = int (position.y/100)*100.f;
-					velocity.y = 0;
-					onGround = true;
-					}
-				else if (level.PhysicalMap [int (position.y/100)] [int ((position.x)/100)] == 2)
-					{
-					position.y = int (position.y/100)*100.f + float (int (position.x)%100);
+					position.y = int ((position.y-1)/100)*100.f + float (int (position.x)%100);
 					velocity.y = velocity.x;
 					onGround = true;
 					}
-				else if (level.PhysicalMap [int (position.y/100)] [int ((position.x)/100)] == 3)
+				else if (level.PhysicalMap [int ((position.y-1)/100)] [int ((position.x)/100)] == 3)
 					{
-					position.y = int (position.y/100)*100.f - float (int (position.x)%100)+100;
+					position.y = int ((position.y-1)/100)*100.f - float (int (position.x)%100)+100;
 					velocity.y = -velocity.x;
+					onGround = true;
+					}
+				else if (level.PhysicalMap [int (position.y/100)] [int ((position.x - 30)/100)] == 1 || level.PhysicalMap [int (position.y/100)] [int ((position.x + 30)/100)] == 1)
+					{
+					position.y = int (position.y/100)*100.f;
+					velocity.y = 0;
 					onGround = true;
 					}
 				else
@@ -747,7 +747,7 @@ void mapObjectsSetup (Level &lvl, std::vector <Stickman*> &stickmans, std::vecto
 				stickmans.push_back (new NPC (stickman_img, guns_img, sf::Vector2f (x*500+250, y*500+400), 80, objectType::soldier, 0, 1, 1));
 			else if (lvl.BlockMap [y] [x] == 15)
 				stickmans.push_back (new NPC (stickman_img, guns_img, sf::Vector2f (x*500+250, y*500+400), 80, objectType::soldier, 0, 1, 0));
-			else if (lvl.BlockMap [y] [x] == 4 || lvl.BlockMap [y] [x] == 15)
+			else if (lvl.BlockMap [y] [x] == 16)
 				mapObjects.push_back (new Door (mapObjects_img, sf::Vector2f (x*500+250, y*500), 100, doorState::Opened));
 			}
 	}
