@@ -146,6 +146,12 @@ const int Blocks [] [5] [5] =
 	7, 10, 2, 2, 2,
 	7, 10, 2, 2, 2,
 	1, 1, 1, 1, 1,
+	// Lift start
+	3, 3, 3, 3, 3,
+	3, 3, 3, 3, 3,
+	3, 3, 3, 3, 3,
+	3, 3, 3, 3, 3,
+	3, 3, 3, 3, 3,
 	};
 
 const char blocksNames [] [32] =
@@ -173,5 +179,6 @@ const char blocksNames [] [32] =
 	"Ladder right up",
 	"Ladder right down",
 	"Left lift entrance",
-	"Right lift entrance"
+	"Right lift entrance",
+	"Lift start"
 	};

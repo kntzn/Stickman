@@ -166,8 +166,45 @@ void SinglePlayer (sf::RenderWindow &window)
 		
 		//--------Physics--------//
 		physics = clock ();
-		if (windowFocus)
+		//if (windowFocus)
+		if (true)
 			{
+			// MapObjects <--> Stickmans
+			for (auto b: mapObjects)
+				{
+				sf::Vector2f closestPos = sf::Vector2f (INFINITY, INFINITY);
+
+				if (b->getType () == objectType::door)
+					{
+					for (auto c: stickmans)
+						if (vecL (c->getBulletStart ()-b->getPos ()) < vecL (closestPos-b->getPos ()))
+							closestPos = c->getBulletStart ();
+
+
+					b->Update (level, time, closestPos);
+					}
+				else if (b->getType () == objectType::lift)
+					{
+					bool consoleActivation = false;
+
+					for (auto c: stickmans)
+						if (vecL (c->getBulletStart ()-b->getPos ()) < vecL (closestPos-b->getPos ()))
+							{
+							consoleActivation = c->getActivation ();
+							closestPos = c->getBulletStart ();
+
+							if (b->getPos ().x-250 < c->getPos ().x && c->getPos ().x < b->getPos ().x+250)
+								if (c->getPos ().y < b->getPos ().y+200 && b->getPos ().y < c->getPos ().y)
+									c->liftRide (b->getPos());
+
+							}
+
+					b->Update (level, time, closestPos, consoleActivation);
+					}
+				else if (b->getType () == objectType::lift)
+					b->Update (level, time, closestPos);
+				}
+
 			// Stickmans
 			for (auto i = stickmans.begin (); i != stickmans.end ();)
 				{
@@ -212,28 +249,6 @@ void SinglePlayer (sf::RenderWindow &window)
 					}
 				else
 					i++;
-				}
-
-			// Stickmans <--> MapObjects
-			for (auto b: mapObjects)
-				{
-				sf::Vector2f closestPos = sf::Vector2f (INFINITY, INFINITY);
-				bool consoleActivation = false;
-
-				for (auto c: stickmans)
-					{
-					if (vecL (c->getBulletStart ()-b->getPos ()) < vecL (closestPos-b->getPos ()))
-						{
-						closestPos = c->getBulletStart ();
-						consoleActivation = c->getActivation ();
-						}
-					}
-				
-				if (b->getType () == objectType::door)
-					b->Update (level, time, closestPos);
-				else if (b->getType () == objectType::console)
-					b->Update (level, time, closestPos, consoleActivation);
-					
 				}
 
 			// Bullets
@@ -297,4 +312,10 @@ void SinglePlayer (sf::RenderWindow &window)
 		window.display ();	
 		tickTimer++;
 		}
+
+	for (auto i = stickmans.begin (); i != stickmans.end ();)
+		i = stickmans.erase (i);
+
+	for (auto i = mapObjects.begin (); i != mapObjects.end ();)
+		i = mapObjects.erase (i);
 	}
