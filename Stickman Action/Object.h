@@ -7,11 +7,14 @@ enum objectType
 	player,
 	citizen,
 	turret,
-	solder,
+	soldier,
 	sergeant,
 	capitain,
 	general,
-	commander
+	commander,
+	door,
+	console,
+	lift
 	};
 
 class Object
@@ -56,15 +59,15 @@ class Object
 			if (!onGround) velocity.y += 9.8f*time;
 			}
 
-		virtual void Draw (sf::RenderWindow &window, float time) = 0;
+		virtual void Draw (sf::RenderWindow &window, float time, bool DEBUG_VIEW = false) = 0;
 
 		sf::Vector2f getPos  () { return position; }
 		sf::Vector2f getVel  () { return velocity; }
 		sf::Vector2f getSize () { return size; }
 		float        getMass () { return mass; }
 		int          getType () { return type; }
-		bool         alive   () { return hp > 0; }
 		float        getHp ()   { return hp; }
+		bool         alive () { return hp > 0; }
 
 		void damage (float dmg, sf::Vector2f kick = sf::Vector2f (0, 0)) { hp -= dmg; velocity += kick;  }
 	};

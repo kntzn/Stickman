@@ -27,6 +27,17 @@ namespace doorState
 		Opened,
 		Off,
 		Locked,
+		LiftDoor
+		};
+	}
+namespace liftState
+	{
+	enum
+		{
+		stopFromDown,
+		up,
+		stopFromUp,
+		down
 		};
 	}
 
@@ -37,7 +48,10 @@ class Stickman: public Object
 		// ?
 		unsigned int action = Action::Stay;
 		bool way = 0;
+		sf::Vector2f trg;
 		unsigned int fraction = -1;
+		bool activation = false;
+		bool onLift = false;
 
 		// Appearance
 		Appearance app;
@@ -64,7 +78,19 @@ class Stickman: public Object
 				(position + size/2.f).x < MAP_W*100.f && (position).y < MAP_H*100.f)
 				{
 				// floor
-				if (level.PhysicalMap [int (position.y/100)] [int ((position.x - 30)/100)] == 1 || level.PhysicalMap [int (position.y/100)] [int ((position.x + 30)/100)] == 1)
+				if (level.PhysicalMap [int ((position.y-1)/100)] [int ((position.x)/100)] == 2)
+					{
+					position.y = int ((position.y-1)/100)*100.f + float (int (position.x)%100);
+					velocity.y = velocity.x;
+					onGround = true;
+					}
+				else if (level.PhysicalMap [int ((position.y-1)/100)] [int ((position.x)/100)] == 3)
+					{
+					position.y = int ((position.y-1)/100)*100.f - float (int (position.x)%100)+100;
+					velocity.y = -velocity.x;
+					onGround = true;
+					}
+				else if (level.PhysicalMap [int (position.y/100)] [int ((position.x - 30)/100)] == 1 || level.PhysicalMap [int (position.y/100)] [int ((position.x + 30)/100)] == 1)
 					{
 					position.y = int (position.y/100)*100.f;
 					velocity.y = 0;
@@ -105,8 +131,19 @@ class Stickman: public Object
 			}
 
 	public:
-		void Draw (sf::RenderWindow &window, float time)
+		void Draw (sf::RenderWindow &window, float time, bool DEBUG_VIEW = false)
 			{
+			if (DEBUG_VIEW)
+				{
+				sf::Vertex targetLine [] =
+					{
+					sf::Vertex (getBulletStart (), sf::Color::Red),
+					sf::Vertex (trg, sf::Color::Red)
+					};
+
+				window.draw (targetLine, 2, sf::PrimitiveType::LinesStrip);
+				}
+
 			sf::Sprite hands;
 			sf::Sprite gunCharge;
 
@@ -168,6 +205,12 @@ class Stickman: public Object
 			{
 			return position + sf::Vector2f (0, -160.f);
 			}
+		bool getActivation () { return activation; }
+		void liftRide (sf::Vector2f pos, sf::Vector2f vel, float time) 
+			{
+			onLift = true;
+			position.y = pos.y - velocity.y*time;
+			}
 	};
 
 class Player: public Stickman
@@ -177,8 +220,21 @@ class Player: public Stickman
 
 		void Control (Level &lvl, sf::Vector2f target, float time)
 			{
+			trg = (target - sf::Vector2f (1920, 1080)/2.f)+getBulletStart();
+			//
+			if (sf::Keyboard::isKeyPressed (sf::Keyboard::E))
+				activation = true;
+			else 
+				activation = false;
+
 			// Walls interactions controls (jumping & sliding)
 			int checkBordersResult = CheckBorders (lvl, time);
+			if (onLift)
+				{
+				onGround = true;
+				onLift = false;
+				}
+
 			if (currentGun == gunSlot::Melee)
 				{
 				if (checkBordersResult == 2)
@@ -284,7 +340,7 @@ class Player: public Stickman
 			if (sf::Keyboard::isKeyPressed (sf::Keyboard::A) && onGround && velocity.x > -15) velocity.x -= (15.f)*time;
 			if (onGround)
 				{
-				if (sf::Keyboard::isKeyPressed (sf::Keyboard::Space)) velocity.y = -5;
+				if (sf::Keyboard::isKeyPressed (sf::Keyboard::Space)) velocity.y -= 5;
 				if (!sf::Keyboard::isKeyPressed (sf::Keyboard::A) && !sf::Keyboard::isKeyPressed (sf::Keyboard::D))
 					{
 					action = Action::Stay;
@@ -376,6 +432,7 @@ class NPC: public Stickman
 
 		void Control (Level &lvl, sf::Vector2f target, float time)
 			{
+			trg = target;
 			sf::Vector2f trgDiff = target - getBulletStart();
 			float trgAngle = atan2 (-trgDiff.x, trgDiff.y);
 			float dist = vecL (trgDiff);
@@ -410,7 +467,7 @@ class NPC: public Stickman
 
 					break;
 					}
-				case objectType::solder:
+				case objectType::soldier:
 					{
 					if (hp != maxHp || trigger ||
 						(checkVisibility (lvl, getBulletStart (), target) && ((way == 0 && trgDiff.x > 0) || (way == 1 && trgDiff.x < 0))))
@@ -578,7 +635,7 @@ class NPC: public Stickman
 					app.clothes = 2;
 					break;
 					}
-				case objectType::solder:
+				case objectType::soldier:
 					{
 					velocity = sf::Vector2f (0, 0);
 					handAngle = Pi*WAY-Pi/2.f;
@@ -595,11 +652,12 @@ class NPC: public Stickman
 			}
 	};
 
-class Door: public Object
+class Console: public Object
 	{
 	private:
 		int state = doorState::Off;
-		sf::Sprite sp;
+		sf::Sprite sp;		
+		sf::Vector2f trg;
 
 		int CheckBorders (Level &level, float time)
 			{
@@ -608,9 +666,67 @@ class Door: public Object
 
 		void Control (Level &lvl, sf::Vector2f target, float time)
 			{
+			trg = target;
+			if (trigger)
+				if (vecL (target - position) > 400)
+					trigger = false;
+			}
+
+	public:
+		void Draw (sf::RenderWindow &window, float time, bool DEBUG_VIEW = false)
+			{
+			if (DEBUG_VIEW)
+				{
+				sf::Vertex targetLine [] =
+					{
+					sf::Vertex (getPos (), sf::Color::Red),
+					sf::Vertex (trg, sf::Color::Red)
+					};
+				if (vecL (trg - position) < 400 && trigger)
+					{
+					targetLine [0].color = sf::Color::Blue;
+					targetLine [1].color = sf::Color::Blue;
+					}
+
+				window.draw (targetLine, 2, sf::PrimitiveType::LinesStrip);
+				}
+			sp.setTextureRect (sf::IntRect (400, 0, size.x, size.y));
+			sp.setPosition (position);
+			window.draw (sp);
+			}
+
+		Console (sf::Image &image, sf::Vector2f POS, float M): Object (image, POS, M)
+			{
+			onGround = true;
+			size = sf::Vector2f (100, 200);
+			type = objectType::console;
+
+			sp.setOrigin (50, 200);
+			sp.setTexture (texture);
+			}
+
+	};
+
+class Door: public Object
+	{
+	#define DOOR_DETECTOR_RANGE 600
+
+	private:
+		int state = doorState::Off;
+		sf::Sprite sp;
+		sf::Vector2f trg;
+
+		int CheckBorders (Level &level, float time)
+			{
+			return true;
+			}
+
+		void Control (Level &lvl, sf::Vector2f target, float time)
+			{
+			trg = target;
 			if (state == doorState::Opened)
 				{
-				if (vecL (target - position) < 600)
+				if (vecL (target - position) < DOOR_DETECTOR_RANGE)
 					{
 					if (size.y > 17)
 						{
@@ -665,8 +781,23 @@ class Door: public Object
 			}
 
 	public:
-		void Draw (sf::RenderWindow &window, float time)
+		void Draw (sf::RenderWindow &window, float time, bool DEBUG_VIEW = false)
 			{
+			if (DEBUG_VIEW)
+				{
+				sf::Vertex targetLine [] =
+					{
+					sf::Vertex (getPos (), sf::Color::Red),
+					sf::Vertex (trg, sf::Color::Red)
+					};
+				if (vecL (trg - position) < DOOR_DETECTOR_RANGE)
+					{
+					targetLine [0].color = sf::Color::Blue;
+					targetLine [1].color = sf::Color::Blue;
+					}
+
+				window.draw (targetLine, 2, sf::PrimitiveType::LinesStrip);
+				}
 			sp.setTextureRect (sf::IntRect (100*state, 0, 100, size.y));
 			sp.setPosition (position);
 			window.draw (sp);
@@ -674,19 +805,120 @@ class Door: public Object
 
 		Door (sf::Image &image, sf::Vector2f POS, float M, int STATE): Object (image, POS, M)
 			{
-			state = STATE;
+			onGround = true;
 			size = sf::Vector2f (100, 400);
+			type = objectType::door;
+
+			trg = position;
+			state = STATE;
+
 			sp.setOrigin (50, 0);
 			sp.setTexture (texture);
-			onGround = true;
 			}
 
+	#undef DOOR_DETECTOR_RANGE
 	};
+class Lift: public Object
+		{
+		#define LIFT_SPEED 15
+
+		private:
+			sf::Sprite sp;
+			sf::Vector2f trg;
+			int state = 0;
+			int prev_trigger = 0;
+
+			int CheckBorders (Level &level, float time)
+				{
+				if (level.PhysicalMap [int (position.y)/100] [int (position.x)/100] == 1)
+					{
+					onGround = true;
+					velocity.y *= -0.1f;
+					position.y = int (position.y/100)*100.f-1;
+					state = liftState::stopFromDown;
+					return 1;
+					}
+				if (level.PhysicalMap [int (position.y-400)/100] [int (position.x)/100] == 1)
+					{
+					onGround = true;
+					velocity.y *= -0.1f;
+					position.y = int (position.y/100+1)*100.f+1;
+					state = liftState::stopFromUp;
+					return 2;
+					}
+				return false;
+				}
+			
+			int getDist (Level &level)
+				{
+				if (velocity.y > 0)
+					for (int i = 0; ; i++)
+						if (level.PhysicalMap [int (position.y/100)+i] [int (position.x/100)] == 1)
+							return i;
+				if (velocity.y < 0)
+					for (int i = 0; ; i--)
+						if (level.PhysicalMap [int (position.y/100)+i] [int (position.x/100)] == 1)
+							return -i;
+
+				return 0;
+				}
+
+			void Control(Level &lvl, sf::Vector2f target, float time)
+				{
+				CheckBorders(lvl, time);
+
+				if (trigger && !prev_trigger)
+					{
+					state = (state+1)% 4;
+					}
+
+				prev_trigger = trigger;
+
+				if (state == liftState::stopFromDown || state == liftState::stopFromUp)
+					{
+					if (velocity.y >  5.f*time)
+						velocity.y -= 5.f*time;
+					else if (velocity.y < -5.f*time)
+						velocity.y += 5.f*time;
+					else
+						velocity.y = 0;
+					}
+				else if(state == liftState::up && velocity.y > -LIFT_SPEED + 3.f*time)
+					velocity.y -= 3.f*time;
+				else if (state == liftState::down && velocity.y < LIFT_SPEED - 3.f*time)
+					velocity.y += 3.f*time;
+				}
+
+		public:
+			void Draw (sf::RenderWindow &window, float time, bool DEBUG_VIEW = false)
+				{
+				sp.setTextureRect (sf::IntRect (500, 0, size.x, size.y));
+				sp.setPosition (position);
+				window.draw (sp);
+				}
+			
+			Lift (sf::Image &image, sf::Vector2f POS, float M): Object (image, POS, M)
+				{
+				onGround = true;
+				size = sf::Vector2f (500, 300);
+				type = objectType::lift;
+	
+				trg = position;
+				state = liftState::up;
+
+				sp.setOrigin (250, 200);
+				sp.setTexture (texture);
+				}
+
+		#undef LIFT_SPEED
+		};
 
 void mapObjectsSetup (Level &lvl, std::vector <Stickman*> &stickmans, std::vector <Object*> &mapObjects,
 					              sf::Image &stickman_img,            sf::Image &mapObjects_img,
 					              sf::Image &guns_img)
 	{
+	stickmans.push_back (new Player (stickman_img, guns_img, sf::Vector2f (lvl.startPos*500 + sf::Vector2i (250, 400)), 80));
+
 	for (int y = 0; y < MAP_H/5; y++)
 		for (int x = 0; x < MAP_W/5; x++)
 			{
@@ -694,5 +926,23 @@ void mapObjectsSetup (Level &lvl, std::vector <Stickman*> &stickmans, std::vecto
 				mapObjects.push_back (new Door (mapObjects_img, sf::Vector2f (x*500+250, y*500), 100, doorState::Off));
 			else if (lvl.BlockMap [y] [x] == 4 || lvl.BlockMap [y] [x] == 5)
 				mapObjects.push_back (new Door (mapObjects_img, sf::Vector2f (x*500+250, y*500), 100, doorState::Opened));
+			else if (lvl.BlockMap [y] [x] == 14)
+				stickmans.push_back (new NPC (stickman_img, guns_img, sf::Vector2f (x*500+250, y*500+400), 80, objectType::soldier, 0, 1, 1));
+			else if (lvl.BlockMap [y] [x] == 15)
+				stickmans.push_back (new NPC (stickman_img, guns_img, sf::Vector2f (x*500+250, y*500+400), 80, objectType::soldier, 0, 1, 0));
+			else if (lvl.BlockMap [y] [x] == 16)
+				mapObjects.push_back (new Door (mapObjects_img, sf::Vector2f (x*500+250, y*500), 100, doorState::Opened));
+			else if (lvl.BlockMap [y] [x] == 22)
+				{
+				mapObjects.push_back (new Console (mapObjects_img, sf::Vector2f (x*500+250, y*500+400), 30));
+				mapObjects.push_back (new Door    (mapObjects_img, sf::Vector2f (x*500+450, y*500), 100, doorState::Opened));
+				}
+			else if (lvl.BlockMap [y] [x] == 23)
+				{
+				mapObjects.push_back (new Console (mapObjects_img, sf::Vector2f (x*500+250, y*500+400), 30));
+				mapObjects.push_back (new Door (mapObjects_img, sf::Vector2f (x*500+50, y*500), 100, doorState::Opened));
+				}
+			else if (lvl.BlockMap [y] [x] == 24)
+				mapObjects.push_back (new Lift (mapObjects_img, sf::Vector2f (x*500+250, y*500+399), 500));
 			}
 	}

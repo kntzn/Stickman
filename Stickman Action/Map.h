@@ -17,6 +17,9 @@ sf::Color mapColors [] =
 class Level
 	{
 	public:
+		sf::Vector2i startPos;
+		sf::Vector2i finishPos;
+
 		int TileMap     [MAP_H][MAP_W] = {};
 		int PhysicalMap [MAP_H][MAP_W] = {};
 		int BlockMap    [MAP_H/5] [MAP_W/5] = {};
@@ -50,12 +53,13 @@ class Level
 			for (int x = 0; x < MAP_W; x++)
 				for (int y = 0; y < MAP_H; y++)
 					{
-					if (TileMap[y][x] == 0)        PhysicalMap [y][x] = 0;
-					else if (TileMap[y][x] == 1)   PhysicalMap [y][x] = 1;
-					else if (TileMap [y] [x] < 7)  PhysicalMap [y] [x] = 0;
-					else if (TileMap [y] [x] < 9)  PhysicalMap [y] [x] = 1;
-					else if (TileMap [y] [x] < 11) PhysicalMap [y] [x] = 0;
-					else if (TileMap [y] [x] < 13) PhysicalMap [y] [x] = 1;
+					if (TileMap[y][x] == 0)         PhysicalMap [y] [x] = 0;
+					else if (TileMap[y][x] == 1)    PhysicalMap [y] [x] = 1;
+					else if (TileMap [y] [x] < 7)   PhysicalMap [y] [x] = 0;
+					else if (TileMap [y] [x] == 7)  PhysicalMap [y] [x] = 2;
+					else if (TileMap [y] [x] == 8)  PhysicalMap [y] [x] = 3;
+					else if (TileMap [y] [x] < 11)  PhysicalMap [y] [x] = 0;
+					else if (TileMap [y] [x] < 13)  PhysicalMap [y] [x] = 1;
 					}
 			}
 
@@ -66,6 +70,15 @@ class Level
 			loadFromFile (filename, buf, bufSize, true);
 
 			size_t cursor = 0;
+			startPos.x = atoi (buf+cursor);
+			cursor += std::to_string (atoi (buf+cursor)).size ()+1;
+			startPos.y = atoi (buf+cursor);
+			cursor += std::to_string (atoi (buf+cursor)).size ()+1;
+			finishPos.x = atoi (buf+cursor);
+			cursor += std::to_string (atoi (buf+cursor)).size ()+1;
+			finishPos.y = atoi (buf+cursor);
+			cursor += std::to_string (atoi (buf+cursor)).size ()+1;
+
 			for (int y = 0; y < MAP_H/5; y++)
 				for (int x = 0; x < MAP_W/5 && cursor < bufSize; x++)
 					{
@@ -83,6 +96,15 @@ class Level
 			char* buf;
 			size_t cursor = 0, bufSize = MAP_H*MAP_W/25*2;
 			buf = (char*) calloc (bufSize*2, sizeof (char));
+
+			std::string s = std::to_string (startPos.x) + " " +
+				            std::to_string (startPos.y) + " " +
+							std::to_string (finishPos.x) + " " +
+							std::to_string (finishPos.y) + " ";
+
+			for (size_t i = 0; i < s.size (); i++)
+				*(buf+cursor+i) = s [i];
+			cursor += s.size ();
 
 			for (int y = 0; y < MAP_H/5; y++)
 				for (int x = 0; x < MAP_W/5; x++)
@@ -158,14 +180,13 @@ void mapEditor (sf::RenderWindow &window, Level &level, sf::Sprite mapSprite, ch
 
 	float tileList = 0;
 	int tile = 0;
-	const int nTileLists = 2;
+	const int nTileLists = 3;
 
 	bool lMousePrsd = false, rMousePrsd = false;
 	float MouseWheelPos = 0;
 
 	bool windowFocus = true;
 	Camera cam (sf::FloatRect (0, 0, float (window.getSize().x), float (window.getSize().y)));
-
 	sf::Clock delayTimer;
 	float avgDelay = 0;
 
@@ -218,11 +239,12 @@ void mapEditor (sf::RenderWindow &window, Level &level, sf::Sprite mapSprite, ch
 		sf::Vector2f cursor = window.mapPixelToCoords (MousePos);
 
  	    // Map scrolling
+		/*
 		if (MousePos.x < 30)								    cam.cam.move (-500/cam.getZoom ()*time, 0);
 		if (MousePos.x > signed int (window.getSize ().x - 30)) cam.cam.move ( 500/cam.getZoom ()*time, 0);
 		if (MousePos.y < 30)								    cam.cam.move (0, -500/cam.getZoom ()*time);
 		if (MousePos.y > signed int (window.getSize ().y - 30)) cam.cam.move (0,  500/cam.getZoom ()*time);
-
+*/
 		// Choosing tile
 		if (sf::Keyboard::isKeyPressed (sf::Keyboard::Num1)) tile = 1 + int (tileList)*9;
 		if (sf::Keyboard::isKeyPressed (sf::Keyboard::Num2)) tile = 2 + int (tileList)*9;
@@ -238,8 +260,17 @@ void mapEditor (sf::RenderWindow &window, Level &level, sf::Sprite mapSprite, ch
 		if (sf::Keyboard::isKeyPressed (sf::Keyboard::Comma)  && tileList > 1.f*time)              tileList -= 1.f*time;
 		if (sf::Keyboard::isKeyPressed (sf::Keyboard::Period) && tileList < nTileLists - 1.f*time) tileList += 1.f*time;
 
+		// Start & finish position
+		if (sf::Keyboard::isKeyPressed (sf::Keyboard::S))
+			level.startPos = sf::Vector2i (cursor/500.f);
+		if (sf::Keyboard::isKeyPressed (sf::Keyboard::F))
+			level.finishPos = sf::Vector2i (cursor/500.f);
+
 		// Drawing
-		window.setView (cam.update (window, sf::Mouse::getPosition (window), MouseWheelPos - initMouseWheelPos, time));
+		cam.cam.move (0, -200.f/cam.getZoom());
+
+		window.setView (cam.update (window, sf::Mouse::getPosition (window), MouseWheelPos - initMouseWheelPos, time));;
+		cam.cam.move (0, 200.f/cam.getZoom ());
 		window.clear ();
 
 		mapSprite.setColor (sf::Color::White);
@@ -265,7 +296,6 @@ void mapEditor (sf::RenderWindow &window, Level &level, sf::Sprite mapSprite, ch
 		text.setPosition (cam.cam.getCenter () - sf::Vector2f (window.getSize ())/2.f/cam.getZoom());
 		text.setScale (sf::Vector2f (1.f, 1.f)/cam.getZoom());
 		
-
 		window.draw (text);
 		window.display ();
 		}
