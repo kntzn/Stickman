@@ -298,6 +298,9 @@ void SinglePlayer (sf::RenderWindow &window)
 		for (int i = 0; i < nBullets; i++)
 			if (onScreen (bullets [i].getPos (), window, camera))
 				bullets [i].Draw (window, time);
+
+		
+
 		/*//Rain
 		for (int i = int (camera.cam.getCenter ().x-window.getSize().x/2)/20; i < int (camera.cam.getCenter ().x+window.getSize ().x/2)/20; i++)
 			{
