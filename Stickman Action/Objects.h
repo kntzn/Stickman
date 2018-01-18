@@ -34,8 +34,9 @@ namespace liftState
 	{
 	enum
 		{
-		stop,
+		stopFromDown,
 		up,
+		stopFromUp,
 		down
 		};
 	}
@@ -205,10 +206,10 @@ class Stickman: public Object
 			return position + sf::Vector2f (0, -160.f);
 			}
 		bool getActivation () { return activation; }
-		void liftRide (sf::Vector2f pos) 
+		void liftRide (sf::Vector2f pos, sf::Vector2f vel, float time) 
 			{
 			onLift = true;
-			position.y = pos.y;
+			position.y = pos.y - velocity.y*time;
 			}
 	};
 
@@ -819,13 +820,13 @@ class Door: public Object
 	};
 class Lift: public Object
 		{
-		#define LIFT_SPEED 20
+		#define LIFT_SPEED 15
 
 		private:
 			sf::Sprite sp;
 			sf::Vector2f trg;
 			int state = 0;
-			int lastCheckBordersResult = 0;
+			int prev_trigger = 0;
 
 			int CheckBorders (Level &level, float time)
 				{
@@ -834,7 +835,7 @@ class Lift: public Object
 					onGround = true;
 					velocity.y *= -0.1f;
 					position.y = int (position.y/100)*100.f-1;
-					state = liftState::stop;
+					state = liftState::stopFromDown;
 					return 1;
 					}
 				if (level.PhysicalMap [int (position.y-400)/100] [int (position.x)/100] == 1)
@@ -842,7 +843,7 @@ class Lift: public Object
 					onGround = true;
 					velocity.y *= -0.1f;
 					position.y = int (position.y/100+1)*100.f+1;
-					state = liftState::stop;
+					state = liftState::stopFromUp;
 					return 2;
 					}
 				return false;
@@ -862,44 +863,30 @@ class Lift: public Object
 				return 0;
 				}
 
-			void Control (Level &lvl, sf::Vector2f target, float time)
+			void Control(Level &lvl, sf::Vector2f target, float time)
 				{
-				if (trigger)
+				CheckBorders(lvl, time);
+
+				if (trigger && !prev_trigger)
 					{
-					if (lastCheckBordersResult == 2)
-						state = liftState::down;
-					else if (lastCheckBordersResult == 1)
-						state = liftState::up;
+					state = (state+1)% 4;
 					}
 
-				trg = target;
-				int check_result = CheckBorders (lvl, time);
-				if (check_result)
-					lastCheckBordersResult = check_result;
-				
-				if (!state)
+				prev_trigger = trigger;
+
+				if (state == liftState::stopFromDown || state == liftState::stopFromUp)
 					{
-					if (velocity.y >  3.f*time)
-						velocity.y -= 3.f*time;
-					else if (velocity.y < -3.f*time)
-						velocity.y += 3.f*time;
+					if (velocity.y >  5.f*time)
+						velocity.y -= 5.f*time;
+					else if (velocity.y < -5.f*time)
+						velocity.y += 5.f*time;
 					else
 						velocity.y = 0;
 					}
-				else if (state == liftState::down)
-					{
-					if (getDist (lvl)*100 < LIFT_SPEED*LIFT_SPEED/6.f)
-						velocity.y -= 10*LIFT_SPEED*time;
-					else if (velocity.y <  LIFT_SPEED - 3.f*time)
-						velocity.y += 3.f*time;
-					}
-				else
-					{
-					if (getDist (lvl)*100 < LIFT_SPEED*LIFT_SPEED/6.f)
-						velocity.y += 10*LIFT_SPEED*time;
-					else if (velocity.y > -LIFT_SPEED + 3.f*time)
-						velocity.y -= 3.f*time;
-					}
+				else if(state == liftState::up && velocity.y > -LIFT_SPEED + 3.f*time)
+					velocity.y -= 3.f*time;
+				else if (state == liftState::down && velocity.y < LIFT_SPEED - 3.f*time)
+					velocity.y += 3.f*time;
 				}
 
 		public:
@@ -909,7 +896,7 @@ class Lift: public Object
 				sp.setPosition (position);
 				window.draw (sp);
 				}
-
+			
 			Lift (sf::Image &image, sf::Vector2f POS, float M): Object (image, POS, M)
 				{
 				onGround = true;

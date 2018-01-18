@@ -195,13 +195,13 @@ void SinglePlayer (sf::RenderWindow &window)
 
 							if (b->getPos ().x-250 < c->getPos ().x && c->getPos ().x < b->getPos ().x+250)
 								if (c->getPos ().y < b->getPos ().y+200 && b->getPos ().y < c->getPos ().y)
-									c->liftRide (b->getPos());
+									c->liftRide (b->getPos(), b->getVel(), time);
 
 							}
 
 					b->Update (level, time, closestPos, consoleActivation);
 					}
-				else if (b->getType () == objectType::lift)
+				else if (b->getType () == objectType::console)
 					b->Update (level, time, closestPos);
 				}
 
@@ -298,8 +298,6 @@ void SinglePlayer (sf::RenderWindow &window)
 		for (int i = 0; i < nBullets; i++)
 			if (onScreen (bullets [i].getPos (), window, camera))
 				bullets [i].Draw (window, time);
-
-		
 
 		/*//Rain
 		for (int i = int (camera.cam.getCenter ().x-window.getSize().x/2)/20; i < int (camera.cam.getCenter ().x+window.getSize ().x/2)/20; i++)
