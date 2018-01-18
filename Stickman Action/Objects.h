@@ -867,14 +867,14 @@ class Lift: public Object
 				{
 				CheckBorders(lvl, time);
 
-				if (trigger && !prev_trigger)
+				if (vecL (target-getPos()) < 300 && trigger && !prev_trigger)
 					{
-					state = (state+1)% 4;
+					state = (state+1)%4;
 					}
 
 				prev_trigger = trigger;
 
-				if (state == liftState::stopFromDown || state == liftState::stopFromUp)
+				if (state == liftState::stopFromDown || state == liftState::stopFromUp || getDist (lvl)*100 < 100*velocity.y*velocity.y/6.f)
 					{
 					if (velocity.y >  5.f*time)
 						velocity.y -= 5.f*time;
